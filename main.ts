@@ -1,4 +1,5 @@
 /// <reference path="phaser/phaser.d.ts"/>
+/// <reference path="joypad/GamePad.ts"/>
 
 class mainState extends Phaser.State {
     private player:Phaser.Sprite;
@@ -12,10 +13,15 @@ class mainState extends Phaser.State {
 
         this.load.image('bg', 'assets/bg.png');
         this.load.image('player', 'assets/player.png');
-
         this.physics.startSystem(Phaser.Physics.ARCADE);
 
         this.cursors = this.input.keyboard.createCursorKeys();
+
+        if (!this.game.device.desktop) {
+            this.load.image('joystick_base', 'assets/transparentDark05.png');
+            this.load.image('joystick_segment', 'assets/transparentDark09.png');
+            this.load.image('joystick_knob', 'assets/transparentDark49.png');
+        }
     }
 
     create():void {
@@ -34,6 +40,11 @@ class mainState extends Phaser.State {
         this.player.body.drag.setTo(this.PLAYER_DRAG, this.PLAYER_DRAG); // x, y
 
         this.camera.follow(this.player);
+
+        if (!this.game.device.desktop) {
+            var g = new Gamepads.GamePad(this.game, Gamepads.GamepadType.DOUBLE_STICK);
+        }
+
     }
 
     update():void {
