@@ -21,6 +21,8 @@ class mainState extends Phaser.State {
     create():void {
         super.create();
 
+        this.world.setBounds(0, 0, 2000, 2000);
+
         this.add.tileSprite(0, 0, this.world.width, this.world.height, 'bg');
 
         this.player = this.add.sprite(this.world.centerX, this.world.centerY, 'player');
@@ -30,6 +32,8 @@ class mainState extends Phaser.State {
         this.player.body.maxVelocity.setTo(this.PLAYER_MAX_SPEED, this.PLAYER_MAX_SPEED); // x, y
         this.player.body.collideWorldBounds = true;
         this.player.body.drag.setTo(this.PLAYER_DRAG, this.PLAYER_DRAG); // x, y
+
+        this.camera.follow(this.player);
     }
 
     update():void {
@@ -58,7 +62,7 @@ class mainState extends Phaser.State {
 
 class ShooterGame extends Phaser.Game {
     constructor() {
-        super(806, 480, Phaser.AUTO, 'gameDiv');
+        super(800, 480, Phaser.AUTO, 'gameDiv');
         this.state.add('main', mainState);
         this.state.start('main');
     }

@@ -21,6 +21,7 @@ var mainState = (function (_super) {
     };
     mainState.prototype.create = function () {
         _super.prototype.create.call(this);
+        this.world.setBounds(0, 0, 2000, 2000);
         this.add.tileSprite(0, 0, this.world.width, this.world.height, 'bg');
         this.player = this.add.sprite(this.world.centerX, this.world.centerY, 'player');
         this.player.anchor.setTo(0.5, 0.5);
@@ -28,6 +29,7 @@ var mainState = (function (_super) {
         this.player.body.maxVelocity.setTo(this.PLAYER_MAX_SPEED, this.PLAYER_MAX_SPEED); // x, y
         this.player.body.collideWorldBounds = true;
         this.player.body.drag.setTo(this.PLAYER_DRAG, this.PLAYER_DRAG); // x, y
+        this.camera.follow(this.player);
     };
     mainState.prototype.update = function () {
         _super.prototype.update.call(this);
@@ -54,7 +56,7 @@ var mainState = (function (_super) {
 var ShooterGame = (function (_super) {
     __extends(ShooterGame, _super);
     function ShooterGame() {
-        _super.call(this, 806, 480, Phaser.AUTO, 'gameDiv');
+        _super.call(this, 800, 480, Phaser.AUTO, 'gameDiv');
         this.state.add('main', mainState);
         this.state.start('main');
     }
