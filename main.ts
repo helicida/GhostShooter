@@ -5,6 +5,8 @@ class mainState extends Phaser.State {
     private player:Phaser.Sprite;
     private cursors:Phaser.CursorKeys;
     private bullets:Phaser.Group;
+    private tilemap:Phaser.Tilemap;
+    private monsters:Phaser.Group;
 
     private PLAYER_ACCELERATION = 500;
     private PLAYER_MAX_SPEED = 300; // pixels/second
@@ -20,6 +22,9 @@ class mainState extends Phaser.State {
         this.load.image('bg', 'assets/bg.png');
         this.load.image('player', 'assets/player.png');
         this.load.image('bullet', 'assets/bullet.png');
+        this.load.image('monster', 'assets/monster.png');
+
+        this.game.load.tilemap('tilemap', 'assets/tiles.json', null, Phaser.Tilemap.TILED_JSON);
 
         this.physics.startSystem(Phaser.Physics.ARCADE);
 
@@ -41,7 +46,18 @@ class mainState extends Phaser.State {
         this.createPlayer();
         this.setupCamera();
         this.createVirtualJoystick();
+        this.createMonsters();
     }
+
+    private createMonsters() {
+        this.monsters = this.add.group();
+        this.monsters.enableBody = true;
+        this.bullets.physicsBodyType = Phaser.Physics.ARCADE;
+
+        this.tilemap = this.game.add.tilemap('tilemap');
+
+        this.tilemap.createFromObjects('monsters', 37, 'monster', 0, true, false, this.monsters);
+    };
 
     private createBullets() {
         this.bullets = this.add.group();
@@ -129,7 +145,7 @@ class mainState extends Phaser.State {
                 bullet.reset(x, y);
 
                 bullet.angle = this.player.angle;
-                bullet.rotation = this.physics.arcade.moveToPointer(bullet, 1000);
+                bullet.rotation = this.physics.arcade.moveToPointer(bullet, 800);
 
                 this.nextFire = this.time.now + this.FIRE_RATE;
             }
@@ -139,7 +155,7 @@ class mainState extends Phaser.State {
 
 class ShooterGame extends Phaser.Game {
     constructor() {
-        super(800, 480, Phaser.AUTO, 'gameDiv');
+        super(1024, 600, Phaser.AUTO, 'gameDiv');
         this.state.add('main', mainState);
         this.state.start('main');
     }

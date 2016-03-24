@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.0" orientation="orthogonal" renderorder="right-down" width="20" height="20" tilewidth="100" tileheight="100" nextobjectid="36">
+ <tileset firstgid="1" name="Background_small" tilewidth="100" tileheight="100" tilecount="36" columns="6">
+  <image source="../../UFO2D/assets/Background_small.png" trans="ff00ff" width="603" height="600"/>
+ </tileset>
+ <tileset firstgid="37" name="monster" tilewidth="145" tileheight="100" tilecount="1" columns="1">
+  <image source="monster.png" trans="ff00ff" width="145" height="100"/>
+ </tileset>
+ <layer name="Capa de Patrones 1" width="20" height="20">
+  <data encoding="csv">
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+</data>
+ </layer>
+ <objectgroup name="monsters">
+  <object id="12" gid="37" x="832" y="178" width="145" height="100"/>
+  <object id="13" gid="37" x="1152" y="226" width="145" height="100"/>
+  <object id="14" gid="37" x="1480" y="250" width="145" height="100"/>
+  <object id="15" gid="37" x="1752" y="578" width="145" height="100"/>
+  <object id="16" gid="37" x="1800" y="850" width="145" height="100"/>
+  <object id="17" gid="37" x="1848" y="1146" width="145" height="100"/>
+  <object id="18" gid="37" x="1824" y="1474" width="145" height="100"/>
+  <object id="19" gid="37" x="1696" y="1770" width="145" height="100"/>
+  <object id="20" gid="37" x="1480" y="1946" width="145" height="100"/>
+  <object id="21" gid="37" x="1176" y="1978" width="145" height="100"/>
+  <object id="22" gid="37" x="928" y="1986" width="145" height="100"/>
+  <object id="23" gid="37" x="664" y="1962" width="145" height="100"/>
+  <object id="24" gid="37" x="408" y="1874" width="145" height="100"/>
+  <object id="25" gid="37" x="200" y="1746" width="145" height="100"/>
+  <object id="26" gid="37" x="24" y="1578" width="145" height="100"/>
+  <object id="27" gid="37" x="16" y="1314" width="145" height="100"/>
+  <object id="28" gid="37" x="-8" y="954" width="145" height="100"/>
+  <object id="29" gid="37" x="-8" y="730" width="145" height="100"/>
+  <object id="30" gid="37" x="56" y="450" width="145" height="100"/>
+  <object id="31" gid="37" x="144" y="322" width="145" height="100"/>
+  <object id="32" gid="37" x="392" y="234" width="145" height="100"/>
+  <object id="33" gid="37" x="648" y="194" width="145" height="100"/>
+  <object id="34" gid="37" x="1704" y="378" width="145" height="100"/>
+ </objectgroup>
+</map>

@@ -991,6 +991,8 @@ var mainState = (function (_super) {
         this.load.image('bg', 'assets/bg.png');
         this.load.image('player', 'assets/player.png');
         this.load.image('bullet', 'assets/bullet.png');
+        this.load.image('monster', 'assets/monster.png');
+        this.game.load.tilemap('tilemap', 'assets/tiles.json', null, Phaser.Tilemap.TILED_JSON);
         this.physics.startSystem(Phaser.Physics.ARCADE);
         this.cursors = this.input.keyboard.createCursorKeys();
         if (!this.game.device.desktop) {
@@ -1007,6 +1009,11 @@ var mainState = (function (_super) {
         this.createPlayer();
         this.setupCamera();
         this.createVirtualJoystick();
+        this.monsters = this.add.group();
+        this.monsters.enableBody = true;
+        this.bullets.physicsBodyType = Phaser.Physics.ARCADE;
+        this.tilemap = this.game.add.tilemap('tilemap');
+        this.tilemap.createFromObjects('monsters', 37, 'monster', 0, true, false, this.monsters);
     };
     mainState.prototype.createBullets = function () {
         this.bullets = this.add.group();
@@ -1080,7 +1087,7 @@ var mainState = (function (_super) {
                 var y = this.player.y;
                 bullet.reset(x, y);
                 bullet.angle = this.player.angle;
-                bullet.rotation = this.physics.arcade.moveToPointer(bullet, 1000);
+                bullet.rotation = this.physics.arcade.moveToPointer(bullet, 800);
                 this.nextFire = this.time.now + this.FIRE_RATE;
             }
         }
@@ -1090,7 +1097,7 @@ var mainState = (function (_super) {
 var ShooterGame = (function (_super) {
     __extends(ShooterGame, _super);
     function ShooterGame() {
-        _super.call(this, 800, 480, Phaser.AUTO, 'gameDiv');
+        _super.call(this, 1024, 600, Phaser.AUTO, 'gameDiv');
         this.state.add('main', mainState);
         this.state.start('main');
     }

@@ -7502,8 +7502,8 @@ declare module Phaser {
          * @param key The key of the tilemap data as stored in the Cache. If you're creating a blank map either leave this parameter out or pass `null`.
          * @param tileWidth The pixel width of a single map tile. If using CSV data you must specify this. Not required if using Tiled map data. - Default: 32
          * @param tileHeight The pixel height of a single map tile. If using CSV data you must specify this. Not required if using Tiled map data. - Default: 32
-         * @param width The width of the map in tiles. If this map is created from Tiled or CSV data you don't need to specify this. - Default: 10
-         * @param height The height of the map in tiles. If this map is created from Tiled or CSV data you don't need to specify this. - Default: 10
+         * @param width The width of the map in tiles.json If this map is created from Tiled or CSV data you don't need to specify this. - Default: 10
+         * @param height The height of the map in tiles.json If this map is created from Tiled or CSV data you don't need to specify this. - Default: 10
          */
         tilemap(key:string, tileWidth?:number, tileHeight?:number, width?:number, height?:number):Phaser.Tilemap;
 
@@ -7849,8 +7849,8 @@ declare module Phaser {
          * @param key The key of the tilemap data as stored in the Cache. If you're creating a blank map either leave this parameter out or pass `null`.
          * @param tileWidth The pixel width of a single map tile. If using CSV data you must specify this. Not required if using Tiled map data. - Default: 32
          * @param tileHeight The pixel height of a single map tile. If using CSV data you must specify this. Not required if using Tiled map data. - Default: 32
-         * @param width The width of the map in tiles. If this map is created from Tiled or CSV data you don't need to specify this. - Default: 10
-         * @param height The height of the map in tiles. If this map is created from Tiled or CSV data you don't need to specify this. - Default: 10
+         * @param width The width of the map in tiles.json If this map is created from Tiled or CSV data you don't need to specify this. - Default: 10
+         * @param height The height of the map in tiles.json If this map is created from Tiled or CSV data you don't need to specify this. - Default: 10
          * @return The newly created tilemap object.
          */
         tilemap(key?:string, tileWidth?:number, tileHeight?:number, width?:number, height?:number):Phaser.Tilemap;
@@ -16358,7 +16358,7 @@ declare module Phaser {
             collide(object1:any, object2:any, collideCallback?:Function, processCallback?:Function, callbackContext?:any):boolean;
 
             /**
-             * Goes through all tiles in the given Tilemap and TilemapLayer and converts those set to collide into physics tiles.
+             * Goes through all tiles in the given Tilemap and TilemapLayer and converts those set to collide into physics tiles.json
              * Only call this *after* you have specified all of the tiles you wish to collide with calls like Tilemap.setCollisionBetween, etc.
              * Every time you call this method it will destroy any previously created bodies and remove them from the world.
              * Therefore understand it's a very expensive operation and not to be done in a core game update loop.
@@ -26550,8 +26550,8 @@ declare module Phaser {
          * @param key The key of the tilemap data as stored in the Cache. If you're creating a blank map either leave this parameter out or pass `null`.
          * @param tileWidth The pixel width of a single map tile. If using CSV data you must specify this. Not required if using Tiled map data. - Default: 32
          * @param tileHeight The pixel height of a single map tile. If using CSV data you must specify this. Not required if using Tiled map data. - Default: 32
-         * @param width The width of the map in tiles. If this map is created from Tiled or CSV data you don't need to specify this. - Default: 10
-         * @param height The height of the map in tiles. If this map is created from Tiled or CSV data you don't need to specify this. - Default: 10
+         * @param width The width of the map in tiles.json If this map is created from Tiled or CSV data you don't need to specify this. - Default: 10
+         * @param height The height of the map in tiles.json If this map is created from Tiled or CSV data you don't need to specify this. - Default: 10
          */
         constructor(game:Phaser.Game, key?:string, tileWidth?:number, tileHeight?:number, width?:number, height?:number);
 
@@ -26719,8 +26719,8 @@ declare module Phaser {
          * Creates an empty map of the given dimensions and one blank layer. If layers already exist they are erased.
          *
          * @param name The name of the default layer of the map.
-         * @param width The width of the map in tiles.
-         * @param height The height of the map in tiles.
+         * @param width The width of the map in tiles.json
+         * @param height The height of the map in tiles.json
          * @param tileWidth The width of the tiles the map uses for calculations.
          * @param tileHeight The height of the tiles the map uses for calculations.
          * @param group Optional Group to add the layer to. If not specified it will be added to the World group.
@@ -26732,8 +26732,8 @@ declare module Phaser {
          * Creates a new and empty layer on this Tilemap. By default TilemapLayers are fixed to the camera.
          *
          * @param name The name of this layer. Must be unique within the map.
-         * @param width The width of the layer in tiles.
-         * @param height The height of the layer in tiles.
+         * @param width The width of the layer in tiles.json
+         * @param height The height of the layer in tiles.json
          * @param tileWidth The width of the tiles the layer uses for calculations.
          * @param tileHeight The height of the tiles the layer uses for calculations.
          * @param group Optional Group to add the layer to. If not specified it will be added to the World group.
@@ -26924,8 +26924,8 @@ declare module Phaser {
          *
          * @param x X position to get the tile from (given in pixels)
          * @param y Y position to get the tile from (given in pixels)
-         * @param tileWidth The width of the tiles. If not given the map default is used.
-         * @param tileHeight The height of the tiles. If not given the map default is used.
+         * @param tileWidth The width of the tiles.json If not given the map default is used.
+         * @param tileHeight The height of the tiles.json If not given the map default is used.
          * @param layer The layer to get the tile from.
          * @param nonNull If true getTile won't return null for empty tiles, but a Tile object with an index of -1.
          * @return The tile at the given coordinates.
@@ -27043,7 +27043,7 @@ declare module Phaser {
         searchTileIndex(index:number, skip?:number, reverse?:boolean, layer?:any):Phaser.Tile;
 
         /**
-         * Sets collision the given tile or tiles. You can pass in either a single numeric index or an array of indexes: [ 2, 3, 15, 20].
+         * Sets collision the given tile or tiles.json You can pass in either a single numeric index or an array of indexes: [ 2, 3, 15, 20].
          * The `collides` parameter controls if collision will be enabled (true) or disabled (false).
          *
          * @param indexes Either a single tile index, or an array of tile IDs to be checked for collision.
@@ -27332,7 +27332,7 @@ declare module Phaser {
         getRayCastTiles(line:Phaser.Line, stepRate?:number, collides?:boolean, interestingFace?:boolean):Phaser.Tile[];
 
         /**
-         * Get all tiles that exist within the given area, defined by the top-left corner, width and height. Values given are in pixels, not tiles.
+         * Get all tiles that exist within the given area, defined by the top-left corner, width and height. Values given are in pixels, not tiles.json
          *
          * @param x X position of the top left corner (in pixels).
          * @param y Y position of the top left corner (in pixels).
@@ -27449,8 +27449,8 @@ declare module Phaser {
          * @param key The key of the tilemap in the Cache.
          * @param tileWidth The pixel width of a single map tile. If using CSV data you must specify this. Not required if using Tiled map data. - Default: 32
          * @param tileHeight The pixel height of a single map tile. If using CSV data you must specify this. Not required if using Tiled map data. - Default: 32
-         * @param width The width of the map in tiles. If this map is created from Tiled or CSV data you don't need to specify this. - Default: 10
-         * @param height The height of the map in tiles. If this map is created from Tiled or CSV data you don't need to specify this. - Default: 10
+         * @param width The width of the map in tiles.json If this map is created from Tiled or CSV data you don't need to specify this. - Default: 10
+         * @param height The height of the map in tiles.json If this map is created from Tiled or CSV data you don't need to specify this. - Default: 10
          * @return The parsed map object.
          */
         static parse(game:Phaser.Game, key:string, tileWidth?:number, tileHeight?:number, width?:number, height?:number):any;
@@ -27513,7 +27513,7 @@ declare module Phaser {
         firstgid:number;
 
         /**
-         * The cached image that contains the individual tiles. Use {@link Phaser.Tileset.setImage setImage} to set.
+         * The cached image that contains the individual tiles.json Use {@link Phaser.Tileset.setImage setImage} to set.
          */
         image:any;
 
@@ -27579,7 +27579,7 @@ declare module Phaser {
         /**
          * Set the image associated with this Tileset and update the tile data.
          *
-         * @param image The image that contains the tiles.
+         * @param image The image that contains the tiles.json
          */
         setImage(image:any):void;
 
