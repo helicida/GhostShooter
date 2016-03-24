@@ -1001,9 +1001,12 @@ var mainState = (function (_super) {
         _super.prototype.create.call(this);
         this.createWorld();
         this.createTiledBackground();
+        this.createBullets();
         this.createPlayer();
         this.setupCamera();
         this.createVirtualJoystick();
+    };
+    mainState.prototype.createBullets = function () {
         this.bullets = this.add.group();
         this.bullets.enableBody = true;
         this.bullets.physicsBodyType = Phaser.Physics.ARCADE;
@@ -1068,10 +1071,13 @@ var mainState = (function (_super) {
         }
     };
     mainState.prototype.fire = function () {
-        var bullet = this.bullets.getFirstExists(false);
+        var bullet = this.bullets.getFirstDead();
         if (bullet) {
-            bullet.reset(this.player.x, this.player.y - 20);
-            bullet.body.velocity.y = -500;
+            var x = this.player.x;
+            var y = this.player.y;
+            bullet.reset(x, y);
+            bullet.angle = this.player.angle;
+            bullet.rotation = this.physics.arcade.moveToPointer(bullet, 1000);
         }
     };
     return mainState;

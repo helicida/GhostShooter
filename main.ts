@@ -33,10 +33,13 @@ class mainState extends Phaser.State {
 
         this.createWorld();
         this.createTiledBackground();
+        this.createBullets();
         this.createPlayer();
         this.setupCamera();
         this.createVirtualJoystick();
+    }
 
+    private createBullets() {
         this.bullets = this.add.group();
         this.bullets.enableBody = true;
         this.bullets.physicsBodyType = Phaser.Physics.ARCADE;
@@ -47,7 +50,7 @@ class mainState extends Phaser.State {
 
         this.bullets.setAll('outOfBoundsKill', true);
         this.bullets.setAll('checkWorldBounds', true);
-    }
+    };
 
     private createVirtualJoystick() {
         if (!this.game.device.desktop) {
@@ -113,10 +116,15 @@ class mainState extends Phaser.State {
     };
 
     fire():void {
-        var bullet = this.bullets.getFirstExists(false);
+        var bullet = this.bullets.getFirstDead();
         if (bullet) {
-            bullet.reset(this.player.x, this.player.y - 20);
-            bullet.body.velocity.y = -500;
+            var x = this.player.x;
+            var y = this.player.y;
+
+            bullet.reset(x, y);
+
+            bullet.angle = this.player.angle;
+            bullet.rotation = this.physics.arcade.moveToPointer(bullet, 1000);
         }
     }
 }
