@@ -1004,17 +1004,23 @@ var mainState = (function (_super) {
         this.createPlayer();
         this.setupCamera();
         this.createVirtualJoystick();
+        this.bullets = this.add.group();
+        this.bullets.enableBody = true;
+        this.bullets.physicsBodyType = Phaser.Physics.ARCADE;
+        this.bullets.createMultiple(20, 'bullet');
+        this.bullets.setAll('anchor.x', 0.5);
+        this.bullets.setAll('anchor.y', 0.5);
+        this.bullets.setAll('outOfBoundsKill', true);
+        this.bullets.setAll('checkWorldBounds', true);
     };
     mainState.prototype.createVirtualJoystick = function () {
         if (!this.game.device.desktop) {
             var g = new Gamepads.GamePad(this.game, Gamepads.GamepadType.DOUBLE_STICK);
         }
     };
-    ;
     mainState.prototype.setupCamera = function () {
         this.camera.follow(this.player);
     };
-    ;
     mainState.prototype.createPlayer = function () {
         this.player = this.add.sprite(this.world.centerX, this.world.centerY, 'player');
         this.player.anchor.setTo(0.5, 0.5);
@@ -1023,15 +1029,12 @@ var mainState = (function (_super) {
         this.player.body.collideWorldBounds = true;
         this.player.body.drag.setTo(this.PLAYER_DRAG, this.PLAYER_DRAG); // x, y
     };
-    ;
     mainState.prototype.createTiledBackground = function () {
         this.add.tileSprite(0, 0, this.world.width, this.world.height, 'bg');
     };
-    ;
     mainState.prototype.createWorld = function () {
         this.world.setBounds(0, 0, 2000, 2000);
     };
-    ;
     mainState.prototype.update = function () {
         _super.prototype.update.call(this);
         this.movePlayer();
@@ -1043,11 +1046,9 @@ var mainState = (function (_super) {
             this.fire();
         }
     };
-    ;
     mainState.prototype.rotatePlayerToPointer = function () {
         this.player.rotation = this.physics.arcade.angleToPointer(this.player, this.input.activePointer);
     };
-    ;
     mainState.prototype.movePlayer = function () {
         if (this.cursors.left.isDown) {
             this.player.body.acceleration.x = -this.PLAYER_ACCELERATION;
@@ -1066,8 +1067,12 @@ var mainState = (function (_super) {
             this.player.body.acceleration.y = 0;
         }
     };
-    ;
     mainState.prototype.fire = function () {
+        var bullet = this.bullets.getFirstExists(false);
+        if (bullet) {
+            bullet.reset(this.player.x, this.player.y - 20);
+            bullet.body.velocity.y = -500;
+        }
     };
     return mainState;
 }(Phaser.State));

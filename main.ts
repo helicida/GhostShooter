@@ -4,6 +4,7 @@
 class mainState extends Phaser.State {
     private player:Phaser.Sprite;
     private cursors:Phaser.CursorKeys;
+    private bullets:Phaser.Group;
 
     private PLAYER_ACCELERATION = 500;
     private PLAYER_MAX_SPEED = 300; // pixels/second
@@ -35,6 +36,17 @@ class mainState extends Phaser.State {
         this.createPlayer();
         this.setupCamera();
         this.createVirtualJoystick();
+
+        this.bullets = this.add.group();
+        this.bullets.enableBody = true;
+        this.bullets.physicsBodyType = Phaser.Physics.ARCADE;
+        this.bullets.createMultiple(20, 'bullet');
+
+        this.bullets.setAll('anchor.x', 0.5);
+        this.bullets.setAll('anchor.y', 0.5);
+
+        this.bullets.setAll('outOfBoundsKill', true);
+        this.bullets.setAll('checkWorldBounds', true);
     }
 
     private createVirtualJoystick() {
@@ -101,7 +113,11 @@ class mainState extends Phaser.State {
     };
 
     fire():void {
-
+        var bullet = this.bullets.getFirstExists(false);
+        if (bullet) {
+            bullet.reset(this.player.x, this.player.y - 20);
+            bullet.body.velocity.y = -500;
+        }
     }
 }
 
