@@ -999,21 +999,56 @@ var mainState = (function (_super) {
     };
     mainState.prototype.create = function () {
         _super.prototype.create.call(this);
-        this.world.setBounds(0, 0, 2000, 2000);
-        this.add.tileSprite(0, 0, this.world.width, this.world.height, 'bg');
+        this.createWorld();
+        this.createTiledBackground();
+        this.createPlayer();
+        this.setupCamera();
+        this.createVirtualJoystick();
+    };
+    mainState.prototype.createVirtualJoystick = function () {
+        if (!this.game.device.desktop) {
+            var g = new Gamepads.GamePad(this.game, Gamepads.GamepadType.DOUBLE_STICK);
+        }
+    };
+    ;
+    mainState.prototype.setupCamera = function () {
+        this.camera.follow(this.player);
+    };
+    ;
+    mainState.prototype.createPlayer = function () {
         this.player = this.add.sprite(this.world.centerX, this.world.centerY, 'player');
         this.player.anchor.setTo(0.5, 0.5);
         this.physics.enable(this.player, Phaser.Physics.ARCADE);
         this.player.body.maxVelocity.setTo(this.PLAYER_MAX_SPEED, this.PLAYER_MAX_SPEED); // x, y
         this.player.body.collideWorldBounds = true;
         this.player.body.drag.setTo(this.PLAYER_DRAG, this.PLAYER_DRAG); // x, y
-        this.camera.follow(this.player);
-        if (!this.game.device.desktop) {
-            var g = new Gamepads.GamePad(this.game, Gamepads.GamepadType.DOUBLE_STICK);
-        }
     };
+    ;
+    mainState.prototype.createTiledBackground = function () {
+        this.add.tileSprite(0, 0, this.world.width, this.world.height, 'bg');
+    };
+    ;
+    mainState.prototype.createWorld = function () {
+        this.world.setBounds(0, 0, 2000, 2000);
+    };
+    ;
     mainState.prototype.update = function () {
         _super.prototype.update.call(this);
+        this.movePlayer();
+        this.rotatePlayerToPointer();
+        this.fireWhenButtonClicked();
+    };
+    mainState.prototype.fireWhenButtonClicked = function () {
+        if (this.input.activePointer.isDown) {
+            this.fire();
+        }
+    };
+    ;
+    mainState.prototype.rotatePlayerToPointer = function () {
+        this.player.rotation = this.physics.arcade.angleToPointer(this.player, this.input.activePointer);
+    };
+    ;
+    mainState.prototype.movePlayer = function () {
         if (this.cursors.left.isDown) {
             this.player.body.acceleration.x = -this.PLAYER_ACCELERATION;
         }
@@ -1030,11 +1065,8 @@ var mainState = (function (_super) {
             this.player.body.acceleration.x = 0;
             this.player.body.acceleration.y = 0;
         }
-        this.player.rotation = this.physics.arcade.angleToPointer(this.player, this.input.activePointer);
-        if (this.input.activePointer.isDown) {
-            this.fire();
-        }
     };
+    ;
     mainState.prototype.fire = function () {
     };
     return mainState;
