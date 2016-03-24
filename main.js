@@ -983,6 +983,8 @@ var mainState = (function (_super) {
         this.PLAYER_ACCELERATION = 500;
         this.PLAYER_MAX_SPEED = 300; // pixels/second
         this.PLAYER_DRAG = 600;
+        this.FIRE_RATE = 150;
+        this.nextFire = 0;
     }
     mainState.prototype.preload = function () {
         _super.prototype.preload.call(this);
@@ -1071,13 +1073,16 @@ var mainState = (function (_super) {
         }
     };
     mainState.prototype.fire = function () {
-        var bullet = this.bullets.getFirstDead();
-        if (bullet) {
-            var x = this.player.x;
-            var y = this.player.y;
-            bullet.reset(x, y);
-            bullet.angle = this.player.angle;
-            bullet.rotation = this.physics.arcade.moveToPointer(bullet, 1000);
+        if (this.time.now > this.nextFire) {
+            var bullet = this.bullets.getFirstDead();
+            if (bullet) {
+                var x = this.player.x;
+                var y = this.player.y;
+                bullet.reset(x, y);
+                bullet.angle = this.player.angle;
+                bullet.rotation = this.physics.arcade.moveToPointer(bullet, 1000);
+                this.nextFire = this.time.now + this.FIRE_RATE;
+            }
         }
     };
     return mainState;

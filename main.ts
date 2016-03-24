@@ -10,6 +10,10 @@ class mainState extends Phaser.State {
     private PLAYER_MAX_SPEED = 300; // pixels/second
     private PLAYER_DRAG = 600;
 
+    private FIRE_RATE = 150;
+    private nextFire = 0;
+
+
     preload():void {
         super.preload();
 
@@ -116,15 +120,19 @@ class mainState extends Phaser.State {
     };
 
     fire():void {
-        var bullet = this.bullets.getFirstDead();
-        if (bullet) {
-            var x = this.player.x;
-            var y = this.player.y;
+        if (this.time.now > this.nextFire) {
+            var bullet = this.bullets.getFirstDead();
+            if (bullet) {
+                var x = this.player.x;
+                var y = this.player.y;
 
-            bullet.reset(x, y);
+                bullet.reset(x, y);
 
-            bullet.angle = this.player.angle;
-            bullet.rotation = this.physics.arcade.moveToPointer(bullet, 1000);
+                bullet.angle = this.player.angle;
+                bullet.rotation = this.physics.arcade.moveToPointer(bullet, 1000);
+
+                this.nextFire = this.time.now + this.FIRE_RATE;
+            }
         }
     }
 }
