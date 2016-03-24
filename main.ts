@@ -13,6 +13,8 @@ class mainState extends Phaser.State {
 
         this.load.image('bg', 'assets/bg.png');
         this.load.image('player', 'assets/player.png');
+        this.load.image('bullet', 'assets/bullet.png');
+
         this.physics.startSystem(Phaser.Physics.ARCADE);
 
         this.cursors = this.input.keyboard.createCursorKeys();
@@ -67,8 +69,15 @@ class mainState extends Phaser.State {
             this.player,
             this.input.activePointer
         );
+
+        if (this.input.activePointer.isDown) {
+            this.fire();
+        }
     }
 
+    fire():void {
+
+    }
 }
 
 class ShooterGame extends Phaser.Game {

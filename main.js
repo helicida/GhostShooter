@@ -76,7 +76,6 @@ var Gamepads;
             };
             this.inputEnable();
         }
-
         /**
          * @function inputEnable
          * enables the plugin actions
@@ -334,7 +333,6 @@ var Gamepads;
                 this.sides = sides;
             this.game.add.existing(this);
         }
-
         PieMask.prototype.drawCircleAtSelf = function () {
             this.drawCircle(this.x, this.y, this.radius * 2);
         };
@@ -413,7 +411,6 @@ var Gamepads;
             this.sprite.anchor.setTo(1, 1);
             this.active = true;
         }
-
         Button.prototype.empty = function () {
         };
         Button.prototype.enableCooldown = function (seconds) {
@@ -557,7 +554,6 @@ var Gamepads;
                     break;
             }
         }
-
         ButtonPad.prototype.initOneFixed = function () {
             var offsetX = this.game.width - this.padding;
             var offsetY = this.game.height - this.padding;
@@ -781,7 +777,6 @@ var Gamepads;
             };
             this.inputEnable();
         }
-
         TouchInput.prototype.inputEnable = function () {
             this.game.input.onDown.add(this.startGesture, this);
             this.game.input.onUp.add(this.endGesture, this);
@@ -936,7 +931,6 @@ var Gamepads;
                     break;
             }
         }
-
         GamePad.prototype.initDoublStick = function () {
             this.stick1 = new Gamepads.Joystick(this.game, Gamepads.Sectors.HALF_LEFT);
             this.stick2 = new Gamepads.Joystick(this.game, Gamepads.Sectors.HALF_RIGHT);
@@ -994,6 +988,7 @@ var mainState = (function (_super) {
         _super.prototype.preload.call(this);
         this.load.image('bg', 'assets/bg.png');
         this.load.image('player', 'assets/player.png');
+        this.load.image('bullet', 'assets/bullet.png');
         this.physics.startSystem(Phaser.Physics.ARCADE);
         this.cursors = this.input.keyboard.createCursorKeys();
         if (!this.game.device.desktop) {
@@ -1036,6 +1031,11 @@ var mainState = (function (_super) {
             this.player.body.acceleration.y = 0;
         }
         this.player.rotation = this.physics.arcade.angleToPointer(this.player, this.input.activePointer);
+        if (this.input.activePointer.isDown) {
+            this.fire();
+        }
+    };
+    mainState.prototype.fire = function () {
     };
     return mainState;
 }(Phaser.State));
