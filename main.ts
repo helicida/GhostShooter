@@ -57,6 +57,13 @@ class mainState extends Phaser.State {
         this.tilemap = this.game.add.tilemap('tilemap');
 
         this.tilemap.createFromObjects('monsters', 37, 'monster', 0, true, false, this.monsters);
+
+        this.monsters.setAll('anchor.x', 0.5);
+        this.monsters.setAll('anchor.y', 0.5);
+        this.monsters.callAll('angle', this.rnd.angle());
+
+        this.monsters.setAll('checkWorldBounds', true);
+
     };
 
     private createBullets() {
@@ -139,8 +146,9 @@ class mainState extends Phaser.State {
         if (this.time.now > this.nextFire) {
             var bullet = this.bullets.getFirstDead();
             if (bullet) {
-                var x = this.player.x;
-                var y = this.player.y;
+                var length = this.player.width * 0.5;
+                var x = this.player.x + (Math.cos(this.player.rotation) * length);
+                var y = this.player.y + (Math.sin(this.player.rotation) * length);
 
                 bullet.reset(x, y);
 
