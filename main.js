@@ -11,9 +11,11 @@ var mainState = (function (_super) {
     }
     mainState.prototype.preload = function () {
         _super.prototype.preload.call(this);
+        this.load.image('bg', 'assets/bg.png');
     };
     mainState.prototype.create = function () {
         _super.prototype.create.call(this);
+        this.add.tileSprite(0, 0, this.world.width, this.world.height, 'bg');
     };
     mainState.prototype.update = function () {
         _super.prototype.update.call(this);

@@ -3,10 +3,14 @@
 class mainState extends Phaser.State {
     preload():void {
         super.preload();
+
+        this.load.image('bg', 'assets/bg.png');
     }
 
     create():void {
         super.create();
+
+        this.add.tileSprite(0, 0, this.world.width, this.world.height, 'bg');
     }
 
     update():void {
