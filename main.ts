@@ -122,8 +122,12 @@ class mainState extends Phaser.State {
         this.movePlayer();
         this.rotatePlayerToPointer();
         this.fireWhenButtonClicked();
-        this.monsters.forEach(this.advanceStraightAhead, this)
+        this.moveMonsters();
     }
+
+    private moveMonsters() {
+        this.monsters.forEach(this.advanceStraightAhead, this)
+    };
 
     private advanceStraightAhead(monster:Phaser.Sprite) {
         this.physics.arcade.velocityFromAngle(monster.angle, 100, monster.body.velocity);
