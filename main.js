@@ -981,7 +981,7 @@ var mainState = (function (_super) {
     function mainState() {
         _super.apply(this, arguments);
         this.PLAYER_ACCELERATION = 500;
-        this.PLAYER_MAX_SPEED = 300; // pixels/second
+        this.PLAYER_MAX_SPEED = 400; // pixels/second
         this.PLAYER_DRAG = 600;
         this.MONSTER_SPEED = 100;
         this.WORLD_SIZE = 2000;
@@ -993,9 +993,10 @@ var mainState = (function (_super) {
         _super.prototype.preload.call(this);
         this.load.image('bg', 'assets/bg.png');
         this.load.image('player', 'assets/survivor1_machine.png');
-        this.load.image('bullet', 'assets/bulletBeige.png');
+        this.load.image('bullet', 'assets/bulletBeigeSilver_outline.png');
         this.load.image('monster', 'assets/zombie2_hold.png');
         this.game.load.tilemap('tilemap', 'assets/tiles.json', null, Phaser.Tilemap.TILED_JSON);
+        this.game.load.image('tiles', 'assets/tilesheet_complete.png');
         this.physics.startSystem(Phaser.Physics.ARCADE);
         this.cursors = this.input.keyboard.createCursorKeys();
         if (!this.game.device.desktop) {
@@ -1006,22 +1007,40 @@ var mainState = (function (_super) {
     };
     mainState.prototype.create = function () {
         _super.prototype.create.call(this);
-        this.createWorld();
-        this.createTiledBackground();
+        this.createTilemap();
+        this.createBackground();
+        this.createWalls();
         this.createBullets();
         this.createPlayer();
         this.setupCamera();
         this.createVirtualJoystick();
         this.createMonsters();
     };
+    mainState.prototype.createWalls = function () {
+        this.walls = this.tilemap.createLayer('walls');
+        this.walls.x = this.world.centerX;
+        this.walls.y = this.world.centerY;
+        this.walls.resizeWorld();
+        this.tilemap.setCollisionBetween(1, 195, true, 'walls');
+    };
+    mainState.prototype.createBackground = function () {
+        this.background = this.tilemap.createLayer('background');
+        this.background.x = this.world.centerX;
+        this.background.y = this.world.centerY;
+    };
+    mainState.prototype.createTilemap = function () {
+        this.tilemap = this.game.add.tilemap('tilemap');
+        this.tilemap.addTilesetImage('tilesheet_complete', 'tiles');
+    };
     mainState.prototype.createMonsters = function () {
         this.monsters = this.add.group();
         this.monsters.enableBody = true;
         this.monsters.physicsBodyType = Phaser.Physics.ARCADE;
-        this.tilemap = this.game.add.tilemap('tilemap');
-        this.tilemap.createFromObjects('monsters', 37, 'monster', 0, true, false, this.monsters);
+        this.tilemap.createFromObjects('monsters', 541, 'monster', 0, true, false, this.monsters);
         this.monsters.setAll('anchor.x', 0.5);
         this.monsters.setAll('anchor.y', 0.5);
+        this.monsters.setAll('scale.x', 2);
+        this.monsters.setAll('scale.y', 2);
         this.monsters.setAll('health', 5);
         this.monsters.forEach(this.setRandomAngle, this);
         this.monsters.setAll('checkWorldBounds', true);
@@ -1054,6 +1073,7 @@ var mainState = (function (_super) {
     mainState.prototype.createPlayer = function () {
         this.player = this.add.sprite(this.world.centerX, this.world.centerY, 'player');
         this.player.anchor.setTo(0.5, 0.5);
+        this.player.scale.setTo(2, 2);
         this.physics.enable(this.player, Phaser.Physics.ARCADE);
         this.player.body.maxVelocity.setTo(this.PLAYER_MAX_SPEED, this.PLAYER_MAX_SPEED); // x, y
         this.player.body.collideWorldBounds = true;
@@ -1062,9 +1082,6 @@ var mainState = (function (_super) {
     mainState.prototype.createTiledBackground = function () {
         this.add.tileSprite(0, 0, this.world.width, this.world.height, 'bg');
     };
-    mainState.prototype.createWorld = function () {
-        this.world.setBounds(0, 0, this.WORLD_SIZE, this.WORLD_SIZE);
-    };
     mainState.prototype.update = function () {
         _super.prototype.update.call(this);
         this.movePlayer();
@@ -1072,6 +1089,8 @@ var mainState = (function (_super) {
         this.fireWhenButtonClicked();
         this.moveMonsters();
         this.physics.arcade.overlap(this.bullets, this.monsters, this.bulletHitMonster, null, this);
+        this.physics.arcade.collide(this.walls, this.player);
+        this.physics.arcade.collide(this.walls, this.monsters, this.resetMonster, null, this);
     };
     mainState.prototype.bulletHitMonster = function (bullet, monster) {
         bullet.kill();
@@ -1116,7 +1135,8 @@ var mainState = (function (_super) {
         if (this.time.now > this.nextFire) {
             var bullet = this.bullets.getFirstDead();
             if (bullet) {
-                var length = this.player.width * 0.5 + 5;
+                var length = this.player.width * 0.5 + 20;
+                console.log(this.player.rotation);
                 var x = this.player.x + (Math.cos(this.player.rotation) * length);
                 var y = this.player.y + (Math.sin(this.player.rotation) * length);
                 bullet.reset(x, y);
@@ -1131,7 +1151,7 @@ var mainState = (function (_super) {
 var ShooterGame = (function (_super) {
     __extends(ShooterGame, _super);
     function ShooterGame() {
-        _super.call(this, 800, 480, Phaser.AUTO, 'gameDiv');
+        _super.call(this, 1024, 768, Phaser.AUTO, 'gameDiv');
         this.state.add('main', mainState);
         this.state.start('main');
     }

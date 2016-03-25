@@ -6,10 +6,12 @@ class mainState extends Phaser.State {
     private cursors:Phaser.CursorKeys;
     private bullets:Phaser.Group;
     private tilemap:Phaser.Tilemap;
+    private background:Phaser.TilemapLayer;
+    private walls:Phaser.TilemapLayer;
     private monsters:Phaser.Group;
 
     private PLAYER_ACCELERATION = 500;
-    private PLAYER_MAX_SPEED = 300; // pixels/second
+    private PLAYER_MAX_SPEED = 400; // pixels/second
     private PLAYER_DRAG = 600;
     private MONSTER_SPEED = 100;
     private WORLD_SIZE = 2000;
@@ -22,10 +24,11 @@ class mainState extends Phaser.State {
 
         this.load.image('bg', 'assets/bg.png');
         this.load.image('player', 'assets/survivor1_machine.png');
-        this.load.image('bullet', 'assets/bulletBeige.png');
+        this.load.image('bullet', 'assets/bulletBeigeSilver_outline.png');
         this.load.image('monster', 'assets/zombie2_hold.png');
 
         this.game.load.tilemap('tilemap', 'assets/tiles.json', null, Phaser.Tilemap.TILED_JSON);
+        this.game.load.image('tiles', 'assets/tilesheet_complete.png');
 
         this.physics.startSystem(Phaser.Physics.ARCADE);
 
@@ -40,9 +43,9 @@ class mainState extends Phaser.State {
 
     create():void {
         super.create();
-
-        this.createWorld();
-        this.createTiledBackground();
+        this.createTilemap();
+        this.createBackground();
+        this.createWalls();
         this.createBullets();
         this.createPlayer();
         this.setupCamera();
@@ -50,17 +53,39 @@ class mainState extends Phaser.State {
         this.createMonsters();
     }
 
+    private createWalls() {
+        this.walls = this.tilemap.createLayer('walls');
+        this.walls.x = this.world.centerX;
+        this.walls.y = this.world.centerY;
+
+        this.walls.resizeWorld();
+
+        this.tilemap.setCollisionBetween(1, 195, true, 'walls');
+    };
+
+    private createBackground() {
+        this.background = this.tilemap.createLayer('background');
+        this.background.x = this.world.centerX;
+        this.background.y = this.world.centerY;
+    };
+
+    private createTilemap() {
+        this.tilemap = this.game.add.tilemap('tilemap');
+        this.tilemap.addTilesetImage('tilesheet_complete', 'tiles');
+
+    };
+
     private createMonsters() {
         this.monsters = this.add.group();
         this.monsters.enableBody = true;
         this.monsters.physicsBodyType = Phaser.Physics.ARCADE;
 
-        this.tilemap = this.game.add.tilemap('tilemap');
-
-        this.tilemap.createFromObjects('monsters', 37, 'monster', 0, true, false, this.monsters);
+        this.tilemap.createFromObjects('monsters', 541, 'monster', 0, true, false, this.monsters);
 
         this.monsters.setAll('anchor.x', 0.5);
         this.monsters.setAll('anchor.y', 0.5);
+        this.monsters.setAll('scale.x', 2);
+        this.monsters.setAll('scale.y', 2);
         this.monsters.setAll('health', 5);
         this.monsters.forEach(this.setRandomAngle, this);
         this.monsters.setAll('checkWorldBounds', true);
@@ -104,6 +129,7 @@ class mainState extends Phaser.State {
     private createPlayer() {
         this.player = this.add.sprite(this.world.centerX, this.world.centerY, 'player');
         this.player.anchor.setTo(0.5, 0.5);
+        this.player.scale.setTo(2, 2);
         this.physics.enable(this.player, Phaser.Physics.ARCADE);
 
         this.player.body.maxVelocity.setTo(this.PLAYER_MAX_SPEED, this.PLAYER_MAX_SPEED); // x, y
@@ -115,10 +141,6 @@ class mainState extends Phaser.State {
         this.add.tileSprite(0, 0, this.world.width, this.world.height, 'bg');
     };
 
-    private createWorld() {
-        this.world.setBounds(0, 0, this.WORLD_SIZE, this.WORLD_SIZE);
-    };
-
     update():void {
         super.update();
         this.movePlayer();
@@ -127,6 +149,8 @@ class mainState extends Phaser.State {
         this.moveMonsters();
 
         this.physics.arcade.overlap(this.bullets, this.monsters, this.bulletHitMonster, null, this);
+        this.physics.arcade.collide(this.walls, this.player);
+        this.physics.arcade.collide(this.walls, this.monsters, this.resetMonster, null, this);
     }
 
     private bulletHitMonster(bullet:Phaser.Sprite, monster:Phaser.Sprite) {
@@ -177,7 +201,8 @@ class mainState extends Phaser.State {
         if (this.time.now > this.nextFire) {
             var bullet = this.bullets.getFirstDead();
             if (bullet) {
-                var length = this.player.width * 0.5 + 5;
+                var length = this.player.width * 0.5 + 20;
+                console.log(this.player.rotation);
                 var x = this.player.x + (Math.cos(this.player.rotation) * length);
                 var y = this.player.y + (Math.sin(this.player.rotation) * length);
 
@@ -194,7 +219,7 @@ class mainState extends Phaser.State {
 
 class ShooterGame extends Phaser.Game {
     constructor() {
-        super(800, 480, Phaser.AUTO, 'gameDiv');
+        super(1024, 768, Phaser.AUTO, 'gameDiv');
         this.state.add('main', mainState);
         this.state.start('main');
     }
