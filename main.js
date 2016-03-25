@@ -1014,11 +1014,12 @@ var mainState = (function (_super) {
     mainState.prototype.createMonsters = function () {
         this.monsters = this.add.group();
         this.monsters.enableBody = true;
-        this.bullets.physicsBodyType = Phaser.Physics.ARCADE;
+        this.monsters.physicsBodyType = Phaser.Physics.ARCADE;
         this.tilemap = this.game.add.tilemap('tilemap');
         this.tilemap.createFromObjects('monsters', 37, 'monster', 0, true, false, this.monsters);
         this.monsters.setAll('anchor.x', 0.5);
         this.monsters.setAll('anchor.y', 0.5);
+        this.monsters.setAll('health', 5);
         this.monsters.forEach(this.setRandomAngle, this);
         this.monsters.setAll('checkWorldBounds', true);
         this.monsters.callAll('events.onOutOfBounds.add', 'events.onOutOfBounds', this.resetMonster, this);
@@ -1071,7 +1072,10 @@ var mainState = (function (_super) {
     };
     mainState.prototype.bulletHitMonster = function (bullet, monster) {
         bullet.kill();
-        monster.kill();
+        monster.damage(1);
+        if (monster.health == 0) {
+            monster.kill();
+        }
     };
     mainState.prototype.moveMonsters = function () {
         this.monsters.forEach(this.advanceStraightAhead, this);

@@ -52,7 +52,7 @@ class mainState extends Phaser.State {
     private createMonsters() {
         this.monsters = this.add.group();
         this.monsters.enableBody = true;
-        this.bullets.physicsBodyType = Phaser.Physics.ARCADE;
+        this.monsters.physicsBodyType = Phaser.Physics.ARCADE;
 
         this.tilemap = this.game.add.tilemap('tilemap');
 
@@ -60,6 +60,7 @@ class mainState extends Phaser.State {
 
         this.monsters.setAll('anchor.x', 0.5);
         this.monsters.setAll('anchor.y', 0.5);
+        this.monsters.setAll('health', 5);
         this.monsters.forEach(this.setRandomAngle, this);
         this.monsters.setAll('checkWorldBounds', true);
         this.monsters.callAll('events.onOutOfBounds.add', 'events.onOutOfBounds', this.resetMonster, this);
@@ -129,7 +130,10 @@ class mainState extends Phaser.State {
 
     private bulletHitMonster(bullet:Phaser.Sprite, monster:Phaser.Sprite) {
         bullet.kill();
-        monster.kill();
+        monster.damage(1);
+        if (monster.health == 0) {
+            monster.kill();
+        }
     }
 
     private moveMonsters() {
