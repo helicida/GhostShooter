@@ -986,6 +986,7 @@ var mainState = (function (_super) {
         this.MONSTER_SPEED = 100;
         this.WORLD_SIZE = 2000;
         this.BULLET_SPEED = 800;
+        this.MONSTER_HEALTH = 3;
         this.FIRE_RATE = 200;
         this.nextFire = 0;
     }
@@ -1023,15 +1024,18 @@ var mainState = (function (_super) {
         this.walls.resizeWorld();
         this.tilemap.setCollisionBetween(1, 195, true, 'walls');
     };
+    ;
     mainState.prototype.createBackground = function () {
         this.background = this.tilemap.createLayer('background');
         this.background.x = this.world.centerX;
         this.background.y = this.world.centerY;
     };
+    ;
     mainState.prototype.createTilemap = function () {
         this.tilemap = this.game.add.tilemap('tilemap');
         this.tilemap.addTilesetImage('tilesheet_complete', 'tiles');
     };
+    ;
     mainState.prototype.createMonsters = function () {
         this.monsters = this.add.group();
         this.monsters.enableBody = true;
@@ -1041,11 +1045,12 @@ var mainState = (function (_super) {
         this.monsters.setAll('anchor.y', 0.5);
         this.monsters.setAll('scale.x', 2);
         this.monsters.setAll('scale.y', 2);
-        this.monsters.setAll('health', 5);
+        this.monsters.setAll('health', this.MONSTER_HEALTH);
         this.monsters.forEach(this.setRandomAngle, this);
         this.monsters.setAll('checkWorldBounds', true);
         this.monsters.callAll('events.onOutOfBounds.add', 'events.onOutOfBounds', this.resetMonster, this);
     };
+    ;
     mainState.prototype.setRandomAngle = function (monster) {
         monster.angle = this.rnd.angle();
     };
@@ -1062,14 +1067,17 @@ var mainState = (function (_super) {
         this.bullets.setAll('outOfBoundsKill', true);
         this.bullets.setAll('checkWorldBounds', true);
     };
+    ;
     mainState.prototype.createVirtualJoystick = function () {
         if (!this.game.device.desktop) {
             var g = new Gamepads.GamePad(this.game, Gamepads.GamepadType.DOUBLE_STICK);
         }
     };
+    ;
     mainState.prototype.setupCamera = function () {
         this.camera.follow(this.player);
     };
+    ;
     mainState.prototype.createPlayer = function () {
         this.player = this.add.sprite(this.world.centerX, this.world.centerY, 'player');
         this.player.anchor.setTo(0.5, 0.5);
@@ -1079,9 +1087,7 @@ var mainState = (function (_super) {
         this.player.body.collideWorldBounds = true;
         this.player.body.drag.setTo(this.PLAYER_DRAG, this.PLAYER_DRAG); // x, y
     };
-    mainState.prototype.createTiledBackground = function () {
-        this.add.tileSprite(0, 0, this.world.width, this.world.height, 'bg');
-    };
+    ;
     mainState.prototype.update = function () {
         _super.prototype.update.call(this);
         this.movePlayer();
@@ -1103,6 +1109,7 @@ var mainState = (function (_super) {
     mainState.prototype.moveMonsters = function () {
         this.monsters.forEach(this.advanceStraightAhead, this);
     };
+    ;
     mainState.prototype.advanceStraightAhead = function (monster) {
         this.physics.arcade.velocityFromAngle(monster.angle, this.MONSTER_SPEED, monster.body.velocity);
     };
@@ -1111,20 +1118,22 @@ var mainState = (function (_super) {
             this.fire();
         }
     };
+    ;
     mainState.prototype.rotatePlayerToPointer = function () {
         this.player.rotation = this.physics.arcade.angleToPointer(this.player, this.input.activePointer);
     };
+    ;
     mainState.prototype.movePlayer = function () {
-        if (this.cursors.left.isDown) {
+        if (this.cursors.left.isDown || this.input.keyboard.isDown(Phaser.Keyboard.A)) {
             this.player.body.acceleration.x = -this.PLAYER_ACCELERATION;
         }
-        else if (this.cursors.right.isDown) {
+        else if (this.cursors.right.isDown || this.input.keyboard.isDown(Phaser.Keyboard.D)) {
             this.player.body.acceleration.x = this.PLAYER_ACCELERATION;
         }
-        else if (this.cursors.up.isDown) {
+        else if (this.cursors.up.isDown || this.input.keyboard.isDown(Phaser.Keyboard.W)) {
             this.player.body.acceleration.y = -this.PLAYER_ACCELERATION;
         }
-        else if (this.cursors.down.isDown) {
+        else if (this.cursors.down.isDown || this.input.keyboard.isDown(Phaser.Keyboard.S)) {
             this.player.body.acceleration.y = this.PLAYER_ACCELERATION;
         }
         else {
@@ -1132,17 +1141,17 @@ var mainState = (function (_super) {
             this.player.body.acceleration.y = 0;
         }
     };
+    ;
     mainState.prototype.fire = function () {
         if (this.time.now > this.nextFire) {
             var bullet = this.bullets.getFirstDead();
             if (bullet) {
                 var length = this.player.width * 0.5 + 20;
-                console.log(this.player.rotation);
                 var x = this.player.x + (Math.cos(this.player.rotation) * length);
                 var y = this.player.y + (Math.sin(this.player.rotation) * length);
                 bullet.reset(x, y);
                 bullet.angle = this.player.angle;
-                bullet.rotation = this.physics.arcade.moveToPointer(bullet, this.BULLET_SPEED);
+                this.physics.arcade.moveToPointer(bullet, this.BULLET_SPEED);
                 this.nextFire = this.time.now + this.FIRE_RATE;
             }
         }

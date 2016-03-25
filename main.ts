@@ -16,6 +16,7 @@ class mainState extends Phaser.State {
     private MONSTER_SPEED = 100;
     private WORLD_SIZE = 2000;
     private BULLET_SPEED = 800;
+    private MONSTER_HEALTH = 3;
     private FIRE_RATE = 200;
     private nextFire = 0;
 
@@ -86,7 +87,7 @@ class mainState extends Phaser.State {
         this.monsters.setAll('anchor.y', 0.5);
         this.monsters.setAll('scale.x', 2);
         this.monsters.setAll('scale.y', 2);
-        this.monsters.setAll('health', 5);
+        this.monsters.setAll('health', this.MONSTER_HEALTH);
         this.monsters.forEach(this.setRandomAngle, this);
         this.monsters.setAll('checkWorldBounds', true);
         this.monsters.callAll('events.onOutOfBounds.add', 'events.onOutOfBounds', this.resetMonster, this);
@@ -136,11 +137,7 @@ class mainState extends Phaser.State {
         this.player.body.collideWorldBounds = true;
         this.player.body.drag.setTo(this.PLAYER_DRAG, this.PLAYER_DRAG); // x, y
     };
-
-    private createTiledBackground() {
-        this.add.tileSprite(0, 0, this.world.width, this.world.height, 'bg');
-    };
-
+    
     update():void {
         super.update();
         this.movePlayer();
@@ -184,13 +181,13 @@ class mainState extends Phaser.State {
     };
 
     private movePlayer() {
-        if (this.cursors.left.isDown) {
+        if (this.cursors.left.isDown || this.input.keyboard.isDown(Phaser.Keyboard.A)) {
             this.player.body.acceleration.x = -this.PLAYER_ACCELERATION;
-        } else if (this.cursors.right.isDown) {
+        } else if (this.cursors.right.isDown || this.input.keyboard.isDown(Phaser.Keyboard.D)) {
             this.player.body.acceleration.x = this.PLAYER_ACCELERATION;
-        } else if (this.cursors.up.isDown) {
+        } else if (this.cursors.up.isDown || this.input.keyboard.isDown(Phaser.Keyboard.W)) {
             this.player.body.acceleration.y = -this.PLAYER_ACCELERATION;
-        } else if (this.cursors.down.isDown) {
+        } else if (this.cursors.down.isDown || this.input.keyboard.isDown(Phaser.Keyboard.S)) {
             this.player.body.acceleration.y = this.PLAYER_ACCELERATION;
         } else {
             this.player.body.acceleration.x = 0;
@@ -203,14 +200,13 @@ class mainState extends Phaser.State {
             var bullet = this.bullets.getFirstDead();
             if (bullet) {
                 var length = this.player.width * 0.5 + 20;
-                console.log(this.player.rotation);
                 var x = this.player.x + (Math.cos(this.player.rotation) * length);
                 var y = this.player.y + (Math.sin(this.player.rotation) * length);
 
                 bullet.reset(x, y);
 
                 bullet.angle = this.player.angle;
-                bullet.rotation = this.physics.arcade.moveToPointer(bullet, this.BULLET_SPEED);
+                this.physics.arcade.moveToPointer(bullet, this.BULLET_SPEED);
 
                 this.nextFire = this.time.now + this.FIRE_RATE;
             }
