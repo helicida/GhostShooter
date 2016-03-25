@@ -1091,6 +1091,7 @@ var mainState = (function (_super) {
         this.physics.arcade.overlap(this.bullets, this.monsters, this.bulletHitMonster, null, this);
         this.physics.arcade.collide(this.walls, this.player);
         this.physics.arcade.collide(this.walls, this.monsters, this.resetMonster, null, this);
+        this.physics.arcade.collide(this.monsters, this.monsters, this.resetMonster, null, this);
     };
     mainState.prototype.bulletHitMonster = function (bullet, monster) {
         bullet.kill();
