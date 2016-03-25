@@ -60,11 +60,21 @@ class mainState extends Phaser.State {
 
         this.monsters.setAll('anchor.x', 0.5);
         this.monsters.setAll('anchor.y', 0.5);
-        this.monsters.forEach((monster) => {
-            monster.angle = this.rnd.angle();
-        }, this);
+        this.monsters.forEach(this.setRandomAngle, this);
         this.monsters.setAll('checkWorldBounds', true);
+        this.monsters.callAll('events.onOutOfBounds.add', 'events.onOutOfBounds', this.resetMonster, this);
     };
+
+    private setRandomAngle(monster:Phaser.Sprite) {
+        monster.angle = this.rnd.angle();
+    }
+
+    private resetMonster(monster:Phaser.Sprite) {
+        monster.rotation = this.physics.arcade.angleBetween(
+            monster,
+            this.player
+        );
+    }
 
     private createBullets() {
         this.bullets = this.add.group();
@@ -112,6 +122,11 @@ class mainState extends Phaser.State {
         this.movePlayer();
         this.rotatePlayerToPointer();
         this.fireWhenButtonClicked();
+        this.monsters.forEach(this.advanceStraightAhead, this)
+    }
+
+    private advanceStraightAhead(monster:Phaser.Sprite) {
+        this.physics.arcade.velocityFromAngle(monster.angle, 100, monster.body.velocity);
     }
 
     private fireWhenButtonClicked() {

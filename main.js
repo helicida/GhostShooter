@@ -1012,7 +1012,6 @@ var mainState = (function (_super) {
         this.createMonsters();
     };
     mainState.prototype.createMonsters = function () {
-        var _this = this;
         this.monsters = this.add.group();
         this.monsters.enableBody = true;
         this.bullets.physicsBodyType = Phaser.Physics.ARCADE;
@@ -1020,10 +1019,15 @@ var mainState = (function (_super) {
         this.tilemap.createFromObjects('monsters', 37, 'monster', 0, true, false, this.monsters);
         this.monsters.setAll('anchor.x', 0.5);
         this.monsters.setAll('anchor.y', 0.5);
-        this.monsters.forEach(function (monster) {
-            monster.angle = _this.rnd.angle();
-        }, this);
+        this.monsters.forEach(this.setRandomAngle, this);
         this.monsters.setAll('checkWorldBounds', true);
+        this.monsters.callAll('events.onOutOfBounds.add', 'events.onOutOfBounds', this.resetMonster, this);
+    };
+    mainState.prototype.setRandomAngle = function (monster) {
+        monster.angle = this.rnd.angle();
+    };
+    mainState.prototype.resetMonster = function (monster) {
+        monster.rotation = this.physics.arcade.angleBetween(monster, this.player);
     };
     mainState.prototype.createBullets = function () {
         this.bullets = this.add.group();
@@ -1062,6 +1066,10 @@ var mainState = (function (_super) {
         this.movePlayer();
         this.rotatePlayerToPointer();
         this.fireWhenButtonClicked();
+        this.monsters.forEach(this.advanceStraightAhead, this);
+    };
+    mainState.prototype.advanceStraightAhead = function (monster) {
+        this.physics.arcade.velocityFromAngle(monster.angle, 100, monster.body.velocity);
     };
     mainState.prototype.fireWhenButtonClicked = function () {
         if (this.input.activePointer.isDown) {
