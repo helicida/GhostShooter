@@ -986,15 +986,15 @@ var mainState = (function (_super) {
         this.MONSTER_SPEED = 100;
         this.WORLD_SIZE = 2000;
         this.BULLET_SPEED = 800;
-        this.FIRE_RATE = 150;
+        this.FIRE_RATE = 200;
         this.nextFire = 0;
     }
     mainState.prototype.preload = function () {
         _super.prototype.preload.call(this);
         this.load.image('bg', 'assets/bg.png');
-        this.load.image('player', 'assets/player.png');
-        this.load.image('bullet', 'assets/bullet.png');
-        this.load.image('monster', 'assets/monster.png');
+        this.load.image('player', 'assets/survivor1_machine.png');
+        this.load.image('bullet', 'assets/bulletBeige.png');
+        this.load.image('monster', 'assets/zombie2_hold.png');
         this.game.load.tilemap('tilemap', 'assets/tiles.json', null, Phaser.Tilemap.TILED_JSON);
         this.physics.startSystem(Phaser.Physics.ARCADE);
         this.cursors = this.input.keyboard.createCursorKeys();
@@ -1116,7 +1116,7 @@ var mainState = (function (_super) {
         if (this.time.now > this.nextFire) {
             var bullet = this.bullets.getFirstDead();
             if (bullet) {
-                var length = this.player.width * 0.5;
+                var length = this.player.width * 0.5 + 5;
                 var x = this.player.x + (Math.cos(this.player.rotation) * length);
                 var y = this.player.y + (Math.sin(this.player.rotation) * length);
                 bullet.reset(x, y);
@@ -1131,7 +1131,7 @@ var mainState = (function (_super) {
 var ShooterGame = (function (_super) {
     __extends(ShooterGame, _super);
     function ShooterGame() {
-        _super.call(this, 1024, 600, Phaser.AUTO, 'gameDiv');
+        _super.call(this, 800, 480, Phaser.AUTO, 'gameDiv');
         this.state.add('main', mainState);
         this.state.start('main');
     }

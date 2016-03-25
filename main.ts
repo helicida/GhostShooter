@@ -14,16 +14,16 @@ class mainState extends Phaser.State {
     private MONSTER_SPEED = 100;
     private WORLD_SIZE = 2000;
     private BULLET_SPEED = 800;
-    private FIRE_RATE = 150;
+    private FIRE_RATE = 200;
     private nextFire = 0;
 
     preload():void {
         super.preload();
 
         this.load.image('bg', 'assets/bg.png');
-        this.load.image('player', 'assets/player.png');
-        this.load.image('bullet', 'assets/bullet.png');
-        this.load.image('monster', 'assets/monster.png');
+        this.load.image('player', 'assets/survivor1_machine.png');
+        this.load.image('bullet', 'assets/bulletBeige.png');
+        this.load.image('monster', 'assets/zombie2_hold.png');
 
         this.game.load.tilemap('tilemap', 'assets/tiles.json', null, Phaser.Tilemap.TILED_JSON);
 
@@ -177,7 +177,7 @@ class mainState extends Phaser.State {
         if (this.time.now > this.nextFire) {
             var bullet = this.bullets.getFirstDead();
             if (bullet) {
-                var length = this.player.width * 0.5;
+                var length = this.player.width * 0.5 + 5;
                 var x = this.player.x + (Math.cos(this.player.rotation) * length);
                 var y = this.player.y + (Math.sin(this.player.rotation) * length);
 
@@ -194,7 +194,7 @@ class mainState extends Phaser.State {
 
 class ShooterGame extends Phaser.Game {
     constructor() {
-        super(1024, 600, Phaser.AUTO, 'gameDiv');
+        super(800, 480, Phaser.AUTO, 'gameDiv');
         this.state.add('main', mainState);
         this.state.start('main');
     }
