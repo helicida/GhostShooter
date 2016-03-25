@@ -123,6 +123,13 @@ class mainState extends Phaser.State {
         this.rotatePlayerToPointer();
         this.fireWhenButtonClicked();
         this.moveMonsters();
+
+        this.physics.arcade.overlap(this.bullets, this.monsters, this.bulletHitMonster, null, this);
+    }
+
+    private bulletHitMonster(bullet:Phaser.Sprite, monster:Phaser.Sprite) {
+        bullet.kill();
+        monster.kill();
     }
 
     private moveMonsters() {
