@@ -1012,6 +1012,7 @@ var mainState = (function (_super) {
         this.createMonsters();
     };
     mainState.prototype.createMonsters = function () {
+        var _this = this;
         this.monsters = this.add.group();
         this.monsters.enableBody = true;
         this.bullets.physicsBodyType = Phaser.Physics.ARCADE;
@@ -1019,7 +1020,9 @@ var mainState = (function (_super) {
         this.tilemap.createFromObjects('monsters', 37, 'monster', 0, true, false, this.monsters);
         this.monsters.setAll('anchor.x', 0.5);
         this.monsters.setAll('anchor.y', 0.5);
-        this.monsters.callAll('angle', this.rnd.angle());
+        this.monsters.forEach(function (monster) {
+            monster.angle = _this.rnd.angle();
+        }, this);
         this.monsters.setAll('checkWorldBounds', true);
     };
     mainState.prototype.createBullets = function () {

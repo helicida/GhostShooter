@@ -60,10 +60,10 @@ class mainState extends Phaser.State {
 
         this.monsters.setAll('anchor.x', 0.5);
         this.monsters.setAll('anchor.y', 0.5);
-        this.monsters.callAll('angle', this.rnd.angle());
-
+        this.monsters.forEach((monster) => {
+            monster.angle = this.rnd.angle();
+        }, this);
         this.monsters.setAll('checkWorldBounds', true);
-
     };
 
     private createBullets() {
