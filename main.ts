@@ -11,10 +11,11 @@ class mainState extends Phaser.State {
     private PLAYER_ACCELERATION = 500;
     private PLAYER_MAX_SPEED = 300; // pixels/second
     private PLAYER_DRAG = 600;
-
+    private MONSTER_SPEED = 100;
+    private WORLD_SIZE = 2000;
+    private BULLET_SPEED = 800;
     private FIRE_RATE = 150;
     private nextFire = 0;
-
 
     preload():void {
         super.preload();
@@ -115,7 +116,7 @@ class mainState extends Phaser.State {
     };
 
     private createWorld() {
-        this.world.setBounds(0, 0, 2000, 2000);
+        this.world.setBounds(0, 0, this.WORLD_SIZE, this.WORLD_SIZE);
     };
 
     update():void {
@@ -141,7 +142,7 @@ class mainState extends Phaser.State {
     };
 
     private advanceStraightAhead(monster:Phaser.Sprite) {
-        this.physics.arcade.velocityFromAngle(monster.angle, 100, monster.body.velocity);
+        this.physics.arcade.velocityFromAngle(monster.angle, this.MONSTER_SPEED, monster.body.velocity);
     }
 
     private fireWhenButtonClicked() {
@@ -183,7 +184,7 @@ class mainState extends Phaser.State {
                 bullet.reset(x, y);
 
                 bullet.angle = this.player.angle;
-                bullet.rotation = this.physics.arcade.moveToPointer(bullet, 800);
+                bullet.rotation = this.physics.arcade.moveToPointer(bullet, this.BULLET_SPEED);
 
                 this.nextFire = this.time.now + this.FIRE_RATE;
             }

@@ -983,6 +983,9 @@ var mainState = (function (_super) {
         this.PLAYER_ACCELERATION = 500;
         this.PLAYER_MAX_SPEED = 300; // pixels/second
         this.PLAYER_DRAG = 600;
+        this.MONSTER_SPEED = 100;
+        this.WORLD_SIZE = 2000;
+        this.BULLET_SPEED = 800;
         this.FIRE_RATE = 150;
         this.nextFire = 0;
     }
@@ -1060,7 +1063,7 @@ var mainState = (function (_super) {
         this.add.tileSprite(0, 0, this.world.width, this.world.height, 'bg');
     };
     mainState.prototype.createWorld = function () {
-        this.world.setBounds(0, 0, 2000, 2000);
+        this.world.setBounds(0, 0, this.WORLD_SIZE, this.WORLD_SIZE);
     };
     mainState.prototype.update = function () {
         _super.prototype.update.call(this);
@@ -1081,7 +1084,7 @@ var mainState = (function (_super) {
         this.monsters.forEach(this.advanceStraightAhead, this);
     };
     mainState.prototype.advanceStraightAhead = function (monster) {
-        this.physics.arcade.velocityFromAngle(monster.angle, 100, monster.body.velocity);
+        this.physics.arcade.velocityFromAngle(monster.angle, this.MONSTER_SPEED, monster.body.velocity);
     };
     mainState.prototype.fireWhenButtonClicked = function () {
         if (this.input.activePointer.isDown) {
@@ -1118,7 +1121,7 @@ var mainState = (function (_super) {
                 var y = this.player.y + (Math.sin(this.player.rotation) * length);
                 bullet.reset(x, y);
                 bullet.angle = this.player.angle;
-                bullet.rotation = this.physics.arcade.moveToPointer(bullet, 800);
+                bullet.rotation = this.physics.arcade.moveToPointer(bullet, this.BULLET_SPEED);
                 this.nextFire = this.time.now + this.FIRE_RATE;
             }
         }
