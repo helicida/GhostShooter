@@ -984,11 +984,13 @@ var mainState = (function (_super) {
         this.PLAYER_MAX_SPEED = 400; // pixels/second
         this.PLAYER_DRAG = 600;
         this.MONSTER_SPEED = 100;
-        this.WORLD_SIZE = 2000;
         this.BULLET_SPEED = 800;
         this.MONSTER_HEALTH = 3;
         this.FIRE_RATE = 200;
+        this.LIVES = 3;
+        this.TEXT_MARGIN = 100;
         this.nextFire = 0;
+        this.score = 0;
     }
     mainState.prototype.preload = function () {
         _super.prototype.preload.call(this);
@@ -996,6 +998,9 @@ var mainState = (function (_super) {
         this.load.image('player', 'assets/survivor1_machine.png');
         this.load.image('bullet', 'assets/bulletBeigeSilver_outline.png');
         this.load.image('monster', 'assets/zombie2_hold.png');
+        this.load.image('explosion', 'assets/smokeWhite0.png');
+        this.load.image('explosion2', 'assets/smokeWhite1.png');
+        this.load.image('explosion3', 'assets/smokeWhite2.png');
         this.game.load.tilemap('tilemap', 'assets/tiles.json', null, Phaser.Tilemap.TILED_JSON);
         this.game.load.image('tiles', 'assets/tilesheet_complete.png');
         this.physics.startSystem(Phaser.Physics.ARCADE);
@@ -1011,11 +1016,42 @@ var mainState = (function (_super) {
         this.createTilemap();
         this.createBackground();
         this.createWalls();
+        this.createExplosions();
         this.createBullets();
         this.createPlayer();
         this.setupCamera();
         this.createVirtualJoystick();
         this.createMonsters();
+        this.createTexts();
+    };
+    mainState.prototype.createTexts = function () {
+        var width = this.scale.bounds.width;
+        var height = this.scale.bounds.height;
+        this.scoreText = this.add.text(this.TEXT_MARGIN, this.TEXT_MARGIN, 'Score: ' + this.score, {
+            font: "35px Arial",
+            fill: "#ffffff"
+        });
+        this.scoreText.fixedToCamera = true;
+        this.livesText = this.add.text(width - this.TEXT_MARGIN, this.TEXT_MARGIN, 'Lives: ' + this.player.health, {
+            font: "35px Arial",
+            fill: "#ffffff"
+        });
+        this.livesText.anchor.setTo(1, 0);
+        this.livesText.fixedToCamera = true;
+        this.stateText = this.add.text(width / 2, height / 2, '', {font: '84px Arial', fill: '#fff'});
+        this.stateText.anchor.setTo(0.5, 0.5);
+        this.stateText.visible = false;
+        this.stateText.fixedToCamera = true;
+    };
+    mainState.prototype.createExplosions = function () {
+        var _this = this;
+        this.explosions = this.add.group();
+        this.explosions.createMultiple(20, 'explosion');
+        this.explosions.setAll('anchor.x', 0.5);
+        this.explosions.setAll('anchor.y', 0.5);
+        this.explosions.forEach(function (explosion) {
+            explosion.loadTexture(_this.rnd.pick(['explosion', 'explosion2', 'explosion3']));
+        }, this);
     };
     mainState.prototype.createWalls = function () {
         this.walls = this.tilemap.createLayer('walls');
@@ -1024,18 +1060,15 @@ var mainState = (function (_super) {
         this.walls.resizeWorld();
         this.tilemap.setCollisionBetween(1, 195, true, 'walls');
     };
-    ;
     mainState.prototype.createBackground = function () {
         this.background = this.tilemap.createLayer('background');
         this.background.x = this.world.centerX;
         this.background.y = this.world.centerY;
     };
-    ;
     mainState.prototype.createTilemap = function () {
         this.tilemap = this.game.add.tilemap('tilemap');
         this.tilemap.addTilesetImage('tilesheet_complete', 'tiles');
     };
-    ;
     mainState.prototype.createMonsters = function () {
         this.monsters = this.add.group();
         this.monsters.enableBody = true;
@@ -1050,7 +1083,6 @@ var mainState = (function (_super) {
         this.monsters.setAll('checkWorldBounds', true);
         this.monsters.callAll('events.onOutOfBounds.add', 'events.onOutOfBounds', this.resetMonster, this);
     };
-    ;
     mainState.prototype.setRandomAngle = function (monster) {
         monster.angle = this.rnd.angle();
     };
@@ -1067,49 +1099,69 @@ var mainState = (function (_super) {
         this.bullets.setAll('outOfBoundsKill', true);
         this.bullets.setAll('checkWorldBounds', true);
     };
-    ;
     mainState.prototype.createVirtualJoystick = function () {
         if (!this.game.device.desktop) {
             var g = new Gamepads.GamePad(this.game, Gamepads.GamepadType.DOUBLE_STICK);
         }
     };
-    ;
     mainState.prototype.setupCamera = function () {
         this.camera.follow(this.player);
     };
-    ;
     mainState.prototype.createPlayer = function () {
         this.player = this.add.sprite(this.world.centerX, this.world.centerY, 'player');
         this.player.anchor.setTo(0.5, 0.5);
         this.player.scale.setTo(2, 2);
+        this.player.health = this.LIVES;
         this.physics.enable(this.player, Phaser.Physics.ARCADE);
         this.player.body.maxVelocity.setTo(this.PLAYER_MAX_SPEED, this.PLAYER_MAX_SPEED); // x, y
         this.player.body.collideWorldBounds = true;
         this.player.body.drag.setTo(this.PLAYER_DRAG, this.PLAYER_DRAG); // x, y
     };
-    ;
     mainState.prototype.update = function () {
         _super.prototype.update.call(this);
         this.movePlayer();
         this.rotatePlayerToPointer();
         this.fireWhenButtonClicked();
         this.moveMonsters();
+        this.physics.arcade.collide(this.player, this.monsters, this.monsterTouchesPlayer, null, this);
+        this.physics.arcade.collide(this.player, this.walls);
         this.physics.arcade.overlap(this.bullets, this.monsters, this.bulletHitMonster, null, this);
-        this.physics.arcade.collide(this.walls, this.player);
+        this.physics.arcade.collide(this.bullets, this.walls, this.bulletHitWall, null, this);
         this.physics.arcade.collide(this.walls, this.monsters, this.resetMonster, null, this);
         this.physics.arcade.collide(this.monsters, this.monsters, this.resetMonster, null, this);
+    };
+    mainState.prototype.monsterTouchesPlayer = function (player, monster) {
+        this.explosion(player.x, player.y);
+        monster.kill();
+        player.damage(1);
+        this.livesText.setText("Lives: " + this.player.health);
+        if (!player.alive) {
+            this.stateText.text = " GAME OVER \n Click to restart";
+            this.stateText.visible = true;
+            //the "click to restart" handler
+            this.input.onTap.addOnce(this.restart, this);
+        }
+    };
+    mainState.prototype.restart = function () {
+        this.game.state.restart();
+    };
+    mainState.prototype.bulletHitWall = function (bullet, walls) {
+        this.explosion(bullet.x, bullet.y);
+        bullet.kill();
     };
     mainState.prototype.bulletHitMonster = function (bullet, monster) {
         bullet.kill();
         monster.damage(1);
         if (monster.health == 0) {
             monster.kill();
+            this.score += 10;
+            this.scoreText.setText("Score: " + this.score);
         }
+        this.explosion(bullet.x, bullet.y);
     };
     mainState.prototype.moveMonsters = function () {
         this.monsters.forEach(this.advanceStraightAhead, this);
     };
-    ;
     mainState.prototype.advanceStraightAhead = function (monster) {
         this.physics.arcade.velocityFromAngle(monster.angle, this.MONSTER_SPEED, monster.body.velocity);
     };
@@ -1118,11 +1170,9 @@ var mainState = (function (_super) {
             this.fire();
         }
     };
-    ;
     mainState.prototype.rotatePlayerToPointer = function () {
         this.player.rotation = this.physics.arcade.angleToPointer(this.player, this.input.activePointer);
     };
-    ;
     mainState.prototype.movePlayer = function () {
         if (this.cursors.left.isDown || this.input.keyboard.isDown(Phaser.Keyboard.A)) {
             this.player.body.acceleration.x = -this.PLAYER_ACCELERATION;
@@ -1141,7 +1191,6 @@ var mainState = (function (_super) {
             this.player.body.acceleration.y = 0;
         }
     };
-    ;
     mainState.prototype.fire = function () {
         if (this.time.now > this.nextFire) {
             var bullet = this.bullets.getFirstDead();
@@ -1150,10 +1199,26 @@ var mainState = (function (_super) {
                 var x = this.player.x + (Math.cos(this.player.rotation) * length);
                 var y = this.player.y + (Math.sin(this.player.rotation) * length);
                 bullet.reset(x, y);
+                this.explosion(x, y);
                 bullet.angle = this.player.angle;
                 this.physics.arcade.moveToPointer(bullet, this.BULLET_SPEED);
                 this.nextFire = this.time.now + this.FIRE_RATE;
             }
+        }
+    };
+    mainState.prototype.explosion = function (x, y) {
+        var explosion = this.explosions.getFirstDead();
+        if (explosion) {
+            explosion.reset(x - this.rnd.integerInRange(0, 5) + this.rnd.integerInRange(0, 5), y - this.rnd.integerInRange(0, 5) + this.rnd.integerInRange(0, 5));
+            explosion.alpha = 0.6;
+            explosion.angle = this.rnd.angle();
+            explosion.scale.setTo(this.rnd.realInRange(0.5, 0.75));
+            this.add.tween(explosion.scale).to({x: 0, y: 0}, 500).start();
+            var tween = this.add.tween(explosion).to({alpha: 0}, 500);
+            tween.onComplete.add(function () {
+                explosion.kill();
+            });
+            tween.start();
         }
     };
     return mainState;
