@@ -23,7 +23,7 @@ class mainState extends Phaser.State {
     private MONSTER_HEALTH = 3;
     private FIRE_RATE = 200;
     private LIVES = 3;
-    private TEXT_MARGIN = 100;
+    private TEXT_MARGIN = 50;
 
     private nextFire = 0;
     private score = 0;
@@ -39,8 +39,8 @@ class mainState extends Phaser.State {
         this.load.image('explosion', 'assets/smokeWhite0.png');
         this.load.image('explosion2', 'assets/smokeWhite1.png');
         this.load.image('explosion3', 'assets/smokeWhite2.png');
-        this.game.load.tilemap('tilemap', 'assets/tiles.json', null, Phaser.Tilemap.TILED_JSON);
-        this.game.load.image('tiles', 'assets/tilesheet_complete.png');
+        this.load.tilemap('tilemap', 'assets/tiles.json', null, Phaser.Tilemap.TILED_JSON);
+        this.load.image('tiles', 'assets/tilesheet_complete.png');
 
         this.physics.startSystem(Phaser.Physics.ARCADE);
 
@@ -72,10 +72,10 @@ class mainState extends Phaser.State {
         var height = this.scale.bounds.height;
 
         this.scoreText = this.add.text(this.TEXT_MARGIN, this.TEXT_MARGIN, 'Score: ' + this.score,
-            {font: "35px Arial", fill: "#ffffff"});
+            {font: "30px Arial", fill: "#ffffff"});
         this.scoreText.fixedToCamera = true;
         this.livesText = this.add.text(width - this.TEXT_MARGIN, this.TEXT_MARGIN, 'Lives: ' + this.player.health,
-            {font: "35px Arial", fill: "#ffffff"});
+            {font: "30px Arial", fill: "#ffffff"});
         this.livesText.anchor.setTo(1, 0);
         this.livesText.fixedToCamera = true;
 
@@ -198,20 +198,20 @@ class mainState extends Phaser.State {
     }
 
     private monsterTouchesPlayer(player:Phaser.Sprite, monster:Phaser.Sprite) {
-        this.explosion(player.x, player.y);
         monster.kill();
 
         player.damage(1);
 
         this.livesText.setText("Lives: " + this.player.health);
 
-        if (!player.alive) {
+        this.blink(player);
+
+        if (player.health == 0) {
             this.stateText.text = " GAME OVER \n Click to restart";
             this.stateText.visible = true;
 
             //the "click to restart" handler
             this.input.onTap.addOnce(this.restart, this);
-
         }
     }
 
@@ -227,12 +227,25 @@ class mainState extends Phaser.State {
     private bulletHitMonster(bullet:Phaser.Sprite, monster:Phaser.Sprite) {
         bullet.kill();
         monster.damage(1);
-        if (monster.health == 0) {
-            monster.kill();
+
+
+        this.explosion(bullet.x, bullet.y);
+
+        if (monster.health > 0) {
+            this.blink(monster)
+        } else {
             this.score += 10;
             this.scoreText.setText("Score: " + this.score);
         }
-        this.explosion(bullet.x, bullet.y);
+    }
+
+    blink(sprite:Phaser.Sprite) {
+        var tween = this.add.tween(sprite)
+            .to({alpha: 0.5}, 100, Phaser.Easing.Bounce.Out)
+            .to({alpha: 1.0}, 100, Phaser.Easing.Bounce.Out);
+
+        tween.repeat(3);
+        tween.start();
     }
 
     private moveMonsters() {
@@ -315,7 +328,7 @@ class mainState extends Phaser.State {
 
 class ShooterGame extends Phaser.Game {
     constructor() {
-        super(1024, 768, Phaser.AUTO, 'gameDiv');
+        super(800, 480, Phaser.AUTO, 'gameDiv');
         this.state.add('main', mainState);
         this.state.start('main');
     }

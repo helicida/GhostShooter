@@ -988,7 +988,7 @@ var mainState = (function (_super) {
         this.MONSTER_HEALTH = 3;
         this.FIRE_RATE = 200;
         this.LIVES = 3;
-        this.TEXT_MARGIN = 100;
+        this.TEXT_MARGIN = 50;
         this.nextFire = 0;
         this.score = 0;
     }
@@ -1001,8 +1001,8 @@ var mainState = (function (_super) {
         this.load.image('explosion', 'assets/smokeWhite0.png');
         this.load.image('explosion2', 'assets/smokeWhite1.png');
         this.load.image('explosion3', 'assets/smokeWhite2.png');
-        this.game.load.tilemap('tilemap', 'assets/tiles.json', null, Phaser.Tilemap.TILED_JSON);
-        this.game.load.image('tiles', 'assets/tilesheet_complete.png');
+        this.load.tilemap('tilemap', 'assets/tiles.json', null, Phaser.Tilemap.TILED_JSON);
+        this.load.image('tiles', 'assets/tilesheet_complete.png');
         this.physics.startSystem(Phaser.Physics.ARCADE);
         this.cursors = this.input.keyboard.createCursorKeys();
         if (!this.game.device.desktop) {
@@ -1028,12 +1028,12 @@ var mainState = (function (_super) {
         var width = this.scale.bounds.width;
         var height = this.scale.bounds.height;
         this.scoreText = this.add.text(this.TEXT_MARGIN, this.TEXT_MARGIN, 'Score: ' + this.score, {
-            font: "35px Arial",
+            font: "30px Arial",
             fill: "#ffffff"
         });
         this.scoreText.fixedToCamera = true;
         this.livesText = this.add.text(width - this.TEXT_MARGIN, this.TEXT_MARGIN, 'Lives: ' + this.player.health, {
-            font: "35px Arial",
+            font: "30px Arial",
             fill: "#ffffff"
         });
         this.livesText.anchor.setTo(1, 0);
@@ -1131,11 +1131,11 @@ var mainState = (function (_super) {
         this.physics.arcade.collide(this.monsters, this.monsters, this.resetMonster, null, this);
     };
     mainState.prototype.monsterTouchesPlayer = function (player, monster) {
-        this.explosion(player.x, player.y);
         monster.kill();
         player.damage(1);
         this.livesText.setText("Lives: " + this.player.health);
-        if (!player.alive) {
+        this.blink(player);
+        if (player.health == 0) {
             this.stateText.text = " GAME OVER \n Click to restart";
             this.stateText.visible = true;
             //the "click to restart" handler
@@ -1152,12 +1152,21 @@ var mainState = (function (_super) {
     mainState.prototype.bulletHitMonster = function (bullet, monster) {
         bullet.kill();
         monster.damage(1);
-        if (monster.health == 0) {
-            monster.kill();
+        this.explosion(bullet.x, bullet.y);
+        if (monster.health > 0) {
+            this.blink(monster);
+        }
+        else {
             this.score += 10;
             this.scoreText.setText("Score: " + this.score);
         }
-        this.explosion(bullet.x, bullet.y);
+    };
+    mainState.prototype.blink = function (sprite) {
+        var tween = this.add.tween(sprite)
+            .to({alpha: 0.5}, 100, Phaser.Easing.Bounce.Out)
+            .to({alpha: 1.0}, 100, Phaser.Easing.Bounce.Out);
+        tween.repeat(3);
+        tween.start();
     };
     mainState.prototype.moveMonsters = function () {
         this.monsters.forEach(this.advanceStraightAhead, this);
@@ -1226,7 +1235,7 @@ var mainState = (function (_super) {
 var ShooterGame = (function (_super) {
     __extends(ShooterGame, _super);
     function ShooterGame() {
-        _super.call(this, 1024, 768, Phaser.AUTO, 'gameDiv');
+        _super.call(this, 800, 480, Phaser.AUTO, 'gameDiv');
         this.state.add('main', mainState);
         this.state.start('main');
     }
