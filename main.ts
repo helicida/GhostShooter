@@ -36,7 +36,10 @@ class mainState extends Phaser.State {
         this.load.image('bg', 'assets/bg.png');
         this.load.image('player', 'assets/survivor1_machine.png');
         this.load.image('bullet', 'assets/bulletBeigeSilver_outline.png');
-        this.load.image('monster', 'assets/zombie2_hold.png');
+        this.load.image('zombie1', 'assets/zoimbie1_hold.png');
+        this.load.image('zombie2', 'assets/zombie2_hold.png');
+        this.load.image('robot', 'assets/robot1_hold.png');
+
         this.load.image('explosion', 'assets/smokeWhite0.png');
         this.load.image('explosion2', 'assets/smokeWhite1.png');
         this.load.image('explosion3', 'assets/smokeWhite2.png');
@@ -137,14 +140,18 @@ class mainState extends Phaser.State {
         this.monsters.enableBody = true;
         this.monsters.physicsBodyType = Phaser.Physics.ARCADE;
 
-        this.tilemap.createFromObjects('monsters', 541, 'monster', 0, true, false, this.monsters);
+        this.tilemap.createFromObjects('monsters', 541, 'zombie1', 0, true, false, this.monsters);
 
         this.monsters.setAll('anchor.x', 0.5);
         this.monsters.setAll('anchor.y', 0.5);
-        this.monsters.setAll('scale.x', 2);
-        this.monsters.setAll('scale.y', 2);
+        //this.monsters.setAll('scale.x', 2);
+        //this.monsters.setAll('scale.y', 2);
         this.monsters.setAll('health', this.MONSTER_HEALTH);
         this.monsters.forEach(this.setRandomAngle, this);
+        this.monsters.forEach((explosion:Phaser.Sprite) => {
+            explosion.loadTexture(this.rnd.pick(['zombie1', 'zombie2', 'robot']));
+        }, this);
+
         this.monsters.setAll('checkWorldBounds', true);
         this.monsters.callAll('events.onOutOfBounds.add', 'events.onOutOfBounds', this.resetMonster, this);
     };
@@ -168,7 +175,8 @@ class mainState extends Phaser.State {
 
         this.bullets.setAll('anchor.x', 0.5);
         this.bullets.setAll('anchor.y', 0.5);
-
+        this.bullets.setAll('scale.x', 0.5);
+        this.bullets.setAll('scale.y', 0.5);
         this.bullets.setAll('outOfBoundsKill', true);
         this.bullets.setAll('checkWorldBounds', true);
     };
@@ -184,7 +192,7 @@ class mainState extends Phaser.State {
     private createPlayer() {
         this.player = this.add.sprite(this.world.centerX, this.world.centerY, 'player');
         this.player.anchor.setTo(0.5, 0.5);
-        this.player.scale.setTo(2, 2);
+        //this.player.scale.setTo(2, 2);
         this.player.health = this.LIVES;
         this.physics.enable(this.player, Phaser.Physics.ARCADE);
 
