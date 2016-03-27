@@ -13,6 +13,7 @@ class mainState extends Phaser.State {
     private scoreText:Phaser.Text;
     private livesText:Phaser.Text;
     private stateText:Phaser.Text;
+    private gamepad:Gamepads.GamePad;
 
 
     private PLAYER_ACCELERATION = 500;
@@ -42,19 +43,28 @@ class mainState extends Phaser.State {
         this.load.tilemap('tilemap', 'assets/tiles.json', null, Phaser.Tilemap.TILED_JSON);
         this.load.image('tiles', 'assets/tilesheet_complete.png');
 
+        this.load.image('joystick_base', 'assets/transparentDark05.png');
+        this.load.image('joystick_segment', 'assets/transparentDark09.png');
+        this.load.image('joystick_knob', 'assets/transparentDark49.png');
+
         this.physics.startSystem(Phaser.Physics.ARCADE);
 
-        this.cursors = this.input.keyboard.createCursorKeys();
-
-        if (!this.game.device.desktop) {
-            this.load.image('joystick_base', 'assets/transparentDark05.png');
-            this.load.image('joystick_segment', 'assets/transparentDark09.png');
-            this.load.image('joystick_knob', 'assets/transparentDark49.png');
+        if (this.game.device.desktop) {
+            this.cursors = this.input.keyboard.createCursorKeys();
+        } else {
+            this.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL;
+            this.scale.pageAlignHorizontally = true;
+            this.scale.pageAlignVertically = true;
+            this.scale.pageAlignHorizontally = true;
+            this.scale.pageAlignVertically = true;
+            this.scale.forceOrientation(true);
+            this.scale.startFullScreen(false);
         }
     }
 
     create():void {
         super.create();
+
         this.createTilemap();
         this.createBackground();
         this.createWalls();
@@ -62,9 +72,12 @@ class mainState extends Phaser.State {
         this.createBullets();
         this.createPlayer();
         this.setupCamera();
-        this.createVirtualJoystick();
         this.createMonsters();
         this.createTexts();
+
+        if (!this.game.device.desktop) {
+            this.createVirtualJoystick();
+        }
     }
 
     private createTexts() {
@@ -161,9 +174,7 @@ class mainState extends Phaser.State {
     };
 
     private createVirtualJoystick() {
-        if (!this.game.device.desktop) {
-            var g = new Gamepads.GamePad(this.game, Gamepads.GamepadType.DOUBLE_STICK);
-        }
+        this.gamepad = new Gamepads.GamePad(this.game, Gamepads.GamepadType.DOUBLE_STICK);
     };
 
     private setupCamera() {
@@ -185,9 +196,14 @@ class mainState extends Phaser.State {
     update():void {
         super.update();
         this.movePlayer();
-        this.rotatePlayerToPointer();
-        this.fireWhenButtonClicked();
         this.moveMonsters();
+        if (this.game.device.desktop) {
+            this.rotatePlayerToPointer();
+            this.fireWhenButtonClicked();
+        } else {
+            this.rotateWithRightStick();
+            this.fireWithRightStick();
+        }
 
         this.physics.arcade.collide(this.player, this.monsters, this.monsterTouchesPlayer, null, this);
         this.physics.arcade.collide(this.player, this.walls);
@@ -195,6 +211,21 @@ class mainState extends Phaser.State {
         this.physics.arcade.collide(this.bullets, this.walls, this.bulletHitWall, null, this);
         this.physics.arcade.collide(this.walls, this.monsters, this.resetMonster, null, this);
         this.physics.arcade.collide(this.monsters, this.monsters, this.resetMonster, null, this);
+    }
+
+    rotateWithRightStick() {
+        var speed = this.gamepad.stick2.speed;
+
+        if (Math.abs(speed.x) + Math.abs(speed.y) > 20) {
+            var rotatePos = new Phaser.Point(this.player.x + speed.x, this.player.y + speed.y);
+            this.player.rotation = this.physics.arcade.angleToXY(this.player, rotatePos.x, rotatePos.y);
+
+            this.fire();
+        }
+    }
+
+    fireWithRightStick() {
+        //this.gamepad.stick2.
     }
 
     private monsterTouchesPlayer(player:Phaser.Sprite, monster:Phaser.Sprite) {
@@ -270,17 +301,44 @@ class mainState extends Phaser.State {
     };
 
     private movePlayer() {
-        if (this.cursors.left.isDown || this.input.keyboard.isDown(Phaser.Keyboard.A)) {
-            this.player.body.acceleration.x = -this.PLAYER_ACCELERATION;
-        } else if (this.cursors.right.isDown || this.input.keyboard.isDown(Phaser.Keyboard.D)) {
-            this.player.body.acceleration.x = this.PLAYER_ACCELERATION;
-        } else if (this.cursors.up.isDown || this.input.keyboard.isDown(Phaser.Keyboard.W)) {
-            this.player.body.acceleration.y = -this.PLAYER_ACCELERATION;
-        } else if (this.cursors.down.isDown || this.input.keyboard.isDown(Phaser.Keyboard.S)) {
-            this.player.body.acceleration.y = this.PLAYER_ACCELERATION;
+        var moveWithKeyboard = function () {
+            if (this.cursors.left.isDown ||
+                this.input.keyboard.isDown(Phaser.Keyboard.A)) {
+                this.player.body.acceleration.x = -this.PLAYER_ACCELERATION;
+            } else if (this.cursors.right.isDown ||
+                this.input.keyboard.isDown(Phaser.Keyboard.D)) {
+                this.player.body.acceleration.x = this.PLAYER_ACCELERATION;
+            } else if (this.cursors.up.isDown ||
+                this.input.keyboard.isDown(Phaser.Keyboard.W)) {
+                this.player.body.acceleration.y = -this.PLAYER_ACCELERATION;
+            } else if (this.cursors.down.isDown ||
+                this.input.keyboard.isDown(Phaser.Keyboard.S)) {
+                this.player.body.acceleration.y = this.PLAYER_ACCELERATION;
+            } else {
+                this.player.body.acceleration.x = 0;
+                this.player.body.acceleration.y = 0;
+            }
+        };
+
+        var moveWithVirtualJoystick = function () {
+            if (this.gamepad.stick1.cursors.left) {
+                this.player.body.acceleration.x = -this.PLAYER_ACCELERATION;
+            }
+            if (this.gamepad.stick1.cursors.right) {
+                this.player.body.acceleration.x = this.PLAYER_ACCELERATION;
+            } else if (this.gamepad.stick1.cursors.up) {
+                this.player.body.acceleration.y = -this.PLAYER_ACCELERATION;
+            } else if (this.gamepad.stick1.cursors.down) {
+                this.player.body.acceleration.y = this.PLAYER_ACCELERATION;
+            } else {
+                this.player.body.acceleration.x = 0;
+                this.player.body.acceleration.y = 0;
+            }
+        };
+        if (this.game.device.desktop) {
+            moveWithKeyboard.call(this);
         } else {
-            this.player.body.acceleration.x = 0;
-            this.player.body.acceleration.y = 0;
+            moveWithVirtualJoystick.call(this);
         }
     };
 
@@ -297,7 +355,10 @@ class mainState extends Phaser.State {
                 this.explosion(x, y);
 
                 bullet.angle = this.player.angle;
-                this.physics.arcade.moveToPointer(bullet, this.BULLET_SPEED);
+
+                var velocity = this.physics.arcade.velocityFromRotation(bullet.rotation, this.BULLET_SPEED);
+
+                bullet.body.velocity.setTo(velocity.x, velocity.y);
 
                 this.nextFire = this.time.now + this.FIRE_RATE;
             }
@@ -328,7 +389,7 @@ class mainState extends Phaser.State {
 
 class ShooterGame extends Phaser.Game {
     constructor() {
-        super(800, 480, Phaser.AUTO, 'gameDiv');
+        super(800, 480, Phaser.CANVAS, 'gameDiv');
         this.state.add('main', mainState);
         this.state.start('main');
     }

@@ -5938,6 +5938,7 @@ declare module Phaser {
      * and the Animation-related events only apply to game objects with animations like {@link Phaser.Sprite}.
      */
     class Events {
+        onDown;
 
 
         /**
