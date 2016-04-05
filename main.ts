@@ -2,37 +2,47 @@
 /// <reference path="joypad/GamePad.ts"/>
 
 class mainState extends Phaser.State {
+
+    // Jugador, cursor y controles
     private player:Phaser.Sprite;
     private cursors:Phaser.CursorKeys;
-    private bullets:Phaser.Group;
+    private gamepad:Gamepads.GamePad;
+
+    // Tilemaps y TileLayers
     private tilemap:Phaser.Tilemap;
     private background:Phaser.TilemapLayer;
     private walls:Phaser.TilemapLayer;
+
+    // Grupos para hacer monstruos
     private monsters:Phaser.Group;
     private explosions:Phaser.Group;
+    private bullets:Phaser.Group;
+
+    // Textos que mostramos en pantalla
     private scoreText:Phaser.Text;
     private livesText:Phaser.Text;
     private stateText:Phaser.Text;
-    private gamepad:Gamepads.GamePad;
 
+    // Constantes
+    private PLAYER_ACCELERATION = 500;  // aceleración del jugador
+    private PLAYER_MAX_SPEED = 400;     // pixels/second
+    private PLAYER_DRAG = 600;          // rozamiento del jugador
+    private MONSTER_SPEED = 100;        // velocidad de los monstruos
+    private BULLET_SPEED = 800;         // velocidad de las balas
+    private MONSTER_HEALTH = 3;         // golpes que aguantan los monstruos
+    private FIRE_RATE = 200;            // cadencia de disparo
+    private LIVES = 3;                  // vidas
+    private TEXT_MARGIN = 50;           // margen de los textos
 
-    private PLAYER_ACCELERATION = 500;
-    private PLAYER_MAX_SPEED = 400; // pixels/second
-    private PLAYER_DRAG = 600;
-    private MONSTER_SPEED = 100;
-    private BULLET_SPEED = 800;
-    private MONSTER_HEALTH = 3;
-    private FIRE_RATE = 200;
-    private LIVES = 3;
-    private TEXT_MARGIN = 50;
-
-    private nextFire = 0;
-    private score = 0;
-
+    // Variables
+    private nextFire = 0;   // Variable auxiliar para calcular el tiempo de disparo
+    private score = 0;      // Puntuación
 
     preload():void {
+
         super.preload();
 
+        // Cargamos las imagenes y el json que incorpora el Tile
         this.load.image('bg', 'assets/bg.png');
         this.load.image('player', 'assets/survivor1_machine.png');
         this.load.image('bullet', 'assets/bulletBeigeSilver_outline.png');
@@ -50,8 +60,10 @@ class mainState extends Phaser.State {
         this.load.image('joystick_segment', 'assets/transparentDark09.png');
         this.load.image('joystick_knob', 'assets/transparentDark49.png');
 
+        // Arrancamos el sistema de físicas
         this.physics.startSystem(Phaser.Physics.ARCADE);
 
+        // Comprobamos la plataforma y ajustamos las teclas y las dimensiones de la pantalla
         if (this.game.device.desktop) {
             this.cursors = this.input.keyboard.createCursorKeys();
         } else {
@@ -68,6 +80,7 @@ class mainState extends Phaser.State {
     create():void {
         super.create();
 
+        // Llamámos a todos los metodos de los creates
         this.createTilemap();
         this.createBackground();
         this.createWalls();
@@ -76,14 +89,18 @@ class mainState extends Phaser.State {
         this.createPlayer();
         this.setupCamera();
         this.createMonsters();
+
+        // Importante crear en último lugar los textos para que el resto de elementos de la pantalla no los pisen
         this.createTexts();
 
+        // Comprobamos en qué plataforma estámos jugando
         if (!this.game.device.desktop) {
             this.createVirtualJoystick();
         }
     }
 
     private createTexts() {
+        // Mostramos los textos
         var width = this.scale.bounds.width;
         var height = this.scale.bounds.height;
 
@@ -101,6 +118,7 @@ class mainState extends Phaser.State {
         this.stateText.fixedToCamera = true;
     };
 
+    // Con este
     private createExplosions() {
         this.explosions = this.add.group();
         this.explosions.createMultiple(20, 'explosion');
@@ -113,21 +131,22 @@ class mainState extends Phaser.State {
         }, this);
     };
 
+    // Método con el que creamos los muros y asignamos su tilemap y
     private createWalls() {
         this.walls = this.tilemap.createLayer('walls');
         this.walls.x = this.world.centerX;
         this.walls.y = this.world.centerY;
-
         this.walls.resizeWorld();
-
         this.tilemap.setCollisionBetween(1, 195, true, 'walls');
     };
 
+    // Método con el que creamos el fondo y ajustamos las coordenadas
     private createBackground() {
         this.background = this.tilemap.createLayer('background');
         this.background.x = this.world.centerX;
         this.background.y = this.world.centerY;
     };
+
 
     private createTilemap() {
         this.tilemap = this.game.add.tilemap('tilemap');
@@ -254,6 +273,7 @@ class mainState extends Phaser.State {
         }
     }
 
+    // metodo para reiniciar el juego de cero (cuidado con las variables)
     restart() {
         this.game.state.restart();
     }
@@ -287,20 +307,24 @@ class mainState extends Phaser.State {
         tween.start();
     }
 
+    // Función para mover los monstruos
     private moveMonsters() {
         this.monsters.forEach(this.advanceStraightAhead, this)
     };
 
+    // Metodo con el que hacemos avanzar los monstruos en dirección a su angulo
     private advanceStraightAhead(monster:Phaser.Sprite) {
         this.physics.arcade.velocityFromAngle(monster.angle, this.MONSTER_SPEED, monster.body.velocity);
     }
 
+    // Función con la que disparamos al hacer clic
     private fireWhenButtonClicked() {
         if (this.input.activePointer.isDown) {
             this.fire();
         }
     };
 
+    // Función con la que rotamos al jugador en dirección al puntero del ratón
     private rotatePlayerToPointer() {
         this.player.rotation = this.physics.arcade.angleToPointer(
             this.player,
@@ -308,7 +332,9 @@ class mainState extends Phaser.State {
         );
     };
 
+    // Función para mover jugador
     private movePlayer() {
+        // Controles de teclado
         var moveWithKeyboard = function () {
             if (this.cursors.left.isDown ||
                 this.input.keyboard.isDown(Phaser.Keyboard.A)) {
@@ -328,10 +354,10 @@ class mainState extends Phaser.State {
             }
         };
 
+        // Controles con joystick
         var moveWithVirtualJoystick = function () {
             if (this.gamepad.stick1.cursors.left) {
-                this.player.body.acceleration.x = -this.PLAYER_ACCELERATION;
-            }
+                this.player.body.acceleration.x = -this.PLAYER_ACCELERATION;}
             if (this.gamepad.stick1.cursors.right) {
                 this.player.body.acceleration.x = this.PLAYER_ACCELERATION;
             } else if (this.gamepad.stick1.cursors.up) {
@@ -343,6 +369,8 @@ class mainState extends Phaser.State {
                 this.player.body.acceleration.y = 0;
             }
         };
+
+        // Comprobamos si la plataforma en la que se ejecuta el juego es escritorio o movil
         if (this.game.device.desktop) {
             moveWithKeyboard.call(this);
         } else {
@@ -350,32 +378,45 @@ class mainState extends Phaser.State {
         }
     };
 
+    // Función para disparar
     fire():void {
+
+        // Usamos un if para respetar la cadencia de disparo
         if (this.time.now > this.nextFire) {
+
+            // Sacamos el primer sprite muerto del group
             var bullet = this.bullets.getFirstDead();
+
             if (bullet) {
+
+                // Colocamos la bala en su posición y angulo
                 var length = this.player.width * 0.5 + 20;
                 var x = this.player.x + (Math.cos(this.player.rotation) * length);
                 var y = this.player.y + (Math.sin(this.player.rotation) * length);
 
+                // Damos los valores a las balas, a las explosiones y el angulo
                 bullet.reset(x, y);
-
                 this.explosion(x, y);
-
                 bullet.angle = this.player.angle;
 
+                // Le damos bien la velocidad en relación al angulo para que la bala apunte bien
                 var velocity = this.physics.arcade.velocityFromRotation(bullet.rotation, this.BULLET_SPEED);
-
                 bullet.body.velocity.setTo(velocity.x, velocity.y);
 
+                // Ajustamos la variable auxiliar nextFire usando la cadencia de fuego para saber cada cuando se puede disaprar
                 this.nextFire = this.time.now + this.FIRE_RATE;
             }
         }
     }
 
     explosion(x:number, y:number):void {
+
+        // Sacamos el primer sprite muerto del group
         var explosion:Phaser.Sprite = this.explosions.getFirstDead();
+
         if (explosion) {
+
+            // Colocamos la explosión con su transpariencia y posición
             explosion.reset(
                 x - this.rnd.integerInRange(0, 5) + this.rnd.integerInRange(0, 5),
                 y - this.rnd.integerInRange(0, 5) + this.rnd.integerInRange(0, 5)
@@ -384,8 +425,11 @@ class mainState extends Phaser.State {
             explosion.angle = this.rnd.angle();
             explosion.scale.setTo(this.rnd.realInRange(0.5, 0.75));
 
+            // Hacemos que varíe su tamaño para dar la sensación de que el humo se disipa
             this.add.tween(explosion.scale).to({x: 0, y: 0}, 500).start();
             var tween = this.add.tween(explosion).to({alpha: 0}, 500);
+
+            // Una vez terminado matámos la explosión
             tween.onComplete.add(() => {
                 explosion.kill();
             });
