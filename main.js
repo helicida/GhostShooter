@@ -1,3 +1,8 @@
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+};
 /**
  * Phaser joystick plugin.
  * Usage: In your preloader function call the static method preloadAssets. It will handle the preload of the necessary
@@ -7,11 +12,6 @@
  * Use the speed dictionary to retrieve the input speed (if you are going to use an analog joystick)
  */
 /// <reference path="../phaser/phaser.d.ts"/>
-var __extends = (this && this.__extends) || function (d, b) {
-    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
-    function __() { this.constructor = d; }
-    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-};
 var Gamepads;
 (function (Gamepads) {
     (function (Sectors) {
@@ -295,7 +295,7 @@ var Gamepads;
             game.load.image('joystick_knob', assets_path + '/joystick_knob.png');
         };
         return Joystick;
-    })(Phaser.Plugin);
+    }(Phaser.Plugin));
     Gamepads.Joystick = Joystick;
 })(Gamepads || (Gamepads = {}));
 /// <reference path="../phaser/phaser.d.ts"/>
@@ -350,7 +350,7 @@ var Gamepads;
                 this.lineToRadians(pj * (Math.PI * 2) + this.rotation, radius);
         };
         return PieMask;
-    })(Phaser.Graphics);
+    }(Phaser.Graphics));
     Gamepads.PieMask = PieMask;
 })(Gamepads || (Gamepads = {}));
 /// <reference path="../phaser/phaser.d.ts"/>
@@ -472,7 +472,7 @@ var Gamepads;
             }
         };
         return Button;
-    })(Phaser.Plugin);
+    }(Phaser.Plugin));
     Gamepads.Button = Button;
 })(Gamepads || (Gamepads = {}));
 /// <reference path="Button.ts"/>
@@ -719,7 +719,7 @@ var Gamepads;
             game.load.image('button5', assets_path + '/button5.png');
         };
         return ButtonPad;
-    })(Phaser.Plugin);
+    }(Phaser.Plugin));
     Gamepads.ButtonPad = ButtonPad;
 })(Gamepads || (Gamepads = {}));
 /// <reference path="../phaser/phaser.d.ts"/>
@@ -865,7 +865,7 @@ var Gamepads;
             game.load.image('joystick_knob', assets_path + '/joystick_knob.png');
         };
         return TouchInput;
-    })(Phaser.Plugin);
+    }(Phaser.Plugin));
     Gamepads.TouchInput = TouchInput;
 })(Gamepads || (Gamepads = {}));
 /// <reference path="../phaser/phaser.d.ts"/>
@@ -951,7 +951,7 @@ var Gamepads;
             Gamepads.ButtonPad.preloadAssets(game, assets_path);
         };
         return GamePad;
-    })(Phaser.Plugin);
+    }(Phaser.Plugin));
     Gamepads.GamePad = GamePad;
 })(Gamepads || (Gamepads = {}));
 /// <reference path="phaser/phaser.d.ts"/>
@@ -959,7 +959,7 @@ var Gamepads;
 var ShooterGame = (function (_super) {
     __extends(ShooterGame, _super);
     function ShooterGame() {
-        _super.call(this, 800, 480, Phaser.CANVAS, 'gameDiv');
+        _super.call(this, 1000, 850, Phaser.CANVAS, 'gameDiv');
         // Constantes
         this.PLAYER_ACCELERATION = 500; // aceleración del jugador
         this.PLAYER_MAX_SPEED = 400; // pixels/second
@@ -977,7 +977,7 @@ var ShooterGame = (function (_super) {
         this.state.start('main');
     }
     return ShooterGame;
-})(Phaser.Game);
+}(Phaser.Game));
 var mainState = (function (_super) {
     __extends(mainState, _super);
     function mainState() {
@@ -1129,14 +1129,9 @@ var mainState = (function (_super) {
     };
     ;
     mainState.prototype.createPlayer = function () {
-        this.game.player = this.add.sprite(this.world.centerX, this.world.centerY, 'player');
-        this.game.player.anchor.setTo(0.5, 0.5);
-        //this.player.scale.setTo(2, 2);
-        this.game.player.health = this.game.LIVES;
-        this.physics.enable(this.game.player, Phaser.Physics.ARCADE);
-        this.game.player.body.maxVelocity.setTo(this.game.PLAYER_MAX_SPEED, this.game.PLAYER_MAX_SPEED); // x, y
-        this.game.player.body.collideWorldBounds = true;
-        this.game.player.body.drag.setTo(this.game.PLAYER_DRAG, this.game.PLAYER_DRAG); // x, y
+        var jugador = new Player('J1', 5, this.game, this.world.centerX, this.world.centerY, 'player', 0);
+        this.game.player = this.add.existing(jugador);
+        // Nota: importante asignar el jugador con add.existing. Si se referencia directamente la variable puede causar problemas
     };
     ;
     mainState.prototype.update = function () {
@@ -1198,7 +1193,6 @@ var mainState = (function (_super) {
         }
         else {
             this.game.score += 10;
-            this.game.scoreText.setText("Score: " + this.game.score);
         }
     };
     mainState.prototype.blink = function (sprite) {
@@ -1325,7 +1319,73 @@ var mainState = (function (_super) {
         }
     };
     return mainState;
-})(Phaser.State);
+}(Phaser.State));
+//---------------------------------------------------------------- //
+// --------- Patrón Observer para la puntuación del jugador ------ //
+//---------------------------------------------------------------- //
+var Player = (function (_super) {
+    __extends(Player, _super);
+    // Constructores
+    function Player(id, numeroVidas, game, x, y, key, frame) {
+        _super.call(this, game, x, y, key, frame);
+        // Codigo al que suscribiremos nuestro jugador
+        this.ScoreBackend = new ScoreBackend();
+        this.puntuacion = 0; // Puntos que lleva
+        // Ajustamos el sprite
+        this.anchor.setTo(0.5, 0.5);
+        this.game.physics.enable(this, Phaser.Physics.ARCADE);
+        this.body.maxVelocity.setTo(this.game.PLAYER_MAX_SPEED, this.game.PLAYER_MAX_SPEED);
+        this.body.collideWorldBounds = true;
+        this.body.drag.setTo(this.game.PLAYER_DRAG, this.game.PLAYER_DRAG);
+        // Datos del jugador
+        this.game = game;
+        this.id = id;
+        this.health = numeroVidas;
+        // Finalmente suscribimos el jugador a nuestro codigo que monitoriza las puntuaciones
+        this.ScoreBackend.suscribirJugador(this);
+    }
+    // Update
+    Player.prototype.update = function () {
+        _super.prototype.update.call(this);
+        this.ScoreBackend.update(this);
+    };
+    // Metodos
+    Player.prototype.notificarPuntuacion = function (puntos) {
+        this.game.scoreText.setText("Score: " + puntos);
+    };
+    // Getters
+    Player.prototype.getId = function () {
+        return this.id;
+    };
+    Player.prototype.getPuntuacion = function () {
+        return this.puntuacion;
+    };
+    return Player;
+}(Phaser.Sprite));
+var ScoreBackend = (function () {
+    // Constructor
+    function ScoreBackend() {
+        // Array que contiene todos los jugadores suscritos
+        this.jugadores = [];
+        // Contador auxiliar para saber en que posición del array escribir
+        this.contador = 0;
+    }
+    // Update
+    ScoreBackend.prototype.update = function (jugador) {
+        // Comprobamos si el jugador que recibimos está suscrito, es decir, si figura en el array
+        for (var iterador = 0; iterador < this.jugadores.length; iterador++) {
+            // Y si lo está notificamos al jugador el canvio pertinente
+            if (this.jugadores[iterador].id == jugador.id) {
+            }
+        }
+    };
+    // Metodos
+    ScoreBackend.prototype.suscribirJugador = function (player) {
+        this.jugadores[this.contador] = player;
+        this.contador++;
+    };
+    return ScoreBackend;
+}());
 window.onload = function () {
     new ShooterGame();
 };

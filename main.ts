@@ -4,7 +4,7 @@
 class ShooterGame extends Phaser.Game {
 
     // Jugador, cursor y controles
-    player:Phaser.Sprite;
+    player:Player;
     cursors:Phaser.CursorKeys;
     gamepad:Gamepads.GamePad;
 
@@ -39,7 +39,7 @@ class ShooterGame extends Phaser.Game {
     score = 0;      // Puntuación
 
     constructor() {
-        super(800, 480, Phaser.CANVAS, 'gameDiv');
+        super(1000, 850, Phaser.CANVAS, 'gameDiv');
         this.state.add('main', mainState);
         this.state.start('main');
     }
@@ -222,21 +222,20 @@ class mainState extends Phaser.State {
     };
 
     private createPlayer() {
-        this.game.player = this.add.sprite(this.world.centerX, this.world.centerY, 'player');
-        this.game.player.anchor.setTo(0.5, 0.5);
-        //this.player.scale.setTo(2, 2);
-        this.game.player.health = this.game.LIVES;
-        this.physics.enable(this.game.player, Phaser.Physics.ARCADE);
 
-        this.game.player.body.maxVelocity.setTo(this.game.PLAYER_MAX_SPEED, this.game.PLAYER_MAX_SPEED); // x, y
-        this.game.player.body.collideWorldBounds = true;
-        this.game.player.body.drag.setTo(this.game.PLAYER_DRAG, this.game.PLAYER_DRAG); // x, y
+        var jugador = new Player('J1', 5, this.game, this.world.centerX, this.world.centerY, 'player', 0);
+        this.game.player = this.add.existing(jugador);
+
+       // Nota: importante asignar el jugador con add.existing. Si se referencia directamente la variable puede causar problemas
+
     };
 
     update():void {
         super.update();
+
         this.movePlayer();
         this.moveMonsters();
+
         if (this.game.device.desktop) {
             this.rotatePlayerToPointer();
             this.fireWhenButtonClicked();
@@ -307,7 +306,7 @@ class mainState extends Phaser.State {
             this.blink(monster)
         } else {
             this.game.score += 10;
-            this.game.scoreText.setText("Score: " + this.game.score);
+            // this.game.scoreText.setText("Score: " + this.game.score);
         }
     }
 
@@ -448,6 +447,96 @@ class mainState extends Phaser.State {
             });
             tween.start();
         }
+    }
+}
+
+//---------------------------------------------------------------- //
+// --------- Patrón Observer para la puntuación del jugador ------ //
+//---------------------------------------------------------------- //
+
+class Player extends Phaser.Sprite {
+
+    // Instanciamos el juego
+    game:ShooterGame;
+
+    // Codigo al que suscribiremos nuestro jugador
+    ScoreBackend:ScoreBackend = new ScoreBackend();
+
+    // Variables
+    id:string;              // ID con la que identificaremos al jugador
+    puntuacion:number = 0;  // Puntos que lleva
+
+    // Constructores
+    constructor(id:string, numeroVidas:number, game:ShooterGame, x:number, y:number, key:string|Phaser.RenderTexture|Phaser.BitmapData|PIXI.Texture, frame:string|number)  {
+        super(game, x, y, key, frame);
+
+        // Ajustamos el sprite
+        this.anchor.setTo(0.5, 0.5);
+        this.game.physics.enable(this, Phaser.Physics.ARCADE);
+        this.body.maxVelocity.setTo(this.game.PLAYER_MAX_SPEED, this.game.PLAYER_MAX_SPEED);
+        this.body.collideWorldBounds = true;
+        this.body.drag.setTo(this.game.PLAYER_DRAG, this.game.PLAYER_DRAG);
+
+        // Datos del jugador
+        this.game = game;
+        this.id = id;
+        this.health = numeroVidas;
+
+        // Finalmente suscribimos el jugador a nuestro codigo que monitoriza las puntuaciones
+         this.ScoreBackend.suscribirJugador(this);
+    }
+
+    // Update
+    update():void  {
+        super.update();
+        this.ScoreBackend.update(this);
+    }
+
+    // Metodos
+
+    notificarPuntuacion(puntos:number):void {
+         this.game.scoreText.setText("Score: " + puntos);
+    }
+
+    // Getters
+    getId():String{
+        return this.id;
+    }
+
+    getPuntuacion():number{
+        return this.puntuacion;
+    }
+
+}
+
+class ScoreBackend {
+
+    // Array que contiene todos los jugadores suscritos
+    jugadores:Array<Player> = [];
+
+    // Contador auxiliar para saber en que posición del array escribir
+    contador:number = 0;
+    
+    // Constructor
+    constructor(){}
+    
+    // Update
+    update(jugador:Player):void {
+
+        // Comprobamos si el jugador que recibimos está suscrito, es decir, si figura en el array
+        for (var iterador = 0; iterador < this.jugadores.length; iterador++) {
+
+            // Y si lo está notificamos al jugador el canvio pertinente
+            if (this.jugadores[iterador].id == jugador.id) {
+               // jugador.notificarPuntuacion(this.game.score);
+            }
+        }
+    }
+    
+    // Metodos
+    suscribirJugador(player:Player) {
+        this.jugadores[this.contador] = player;
+        this.contador++;
     }
 }
 
