@@ -113,9 +113,92 @@ class mainState extends Phaser.State {
         }
     }
 
+    //-------------------------------------------------------------------------------
+    // Create elementos fisicos: Jugadores, monstruos, balas y explosiones
+    //-------------------------------------------------------------------------------
+
+    // Jugador principal
+    private createPlayer() {
+
+        var jugador = new Player('J1', 5, this.game, this.world.centerX, this.world.centerY, 'player', 0);
+        this.game.player = this.add.existing(jugador);
+
+        // Nota: importante asignar el jugador con add.existing. Si se referencia directamente la variable causará problemas
+    };
+
+    // Generamos los monstruos cdel tipo que nos interese
+    private createMonsters() {
+
+        this.game.monsters = this.add.group();
+
+        // Instanciamos la clase factory que es con la que construiremos los zombies
+        var factory = new MonsterFactory(this.game);
+
+        // Generamos 10 zombies rápidos
+        for (var iterador = 0; iterador < 10; iterador++) {
+
+            var monster1 = factory.generarMonstruo('Zombie Runner');
+
+            // Anyadimos los zombies al grupo
+            this.game.add.existing(monster1);
+            this.game.monsters.add(monster1)
+        }
+
+        // Generamos 15 normales
+        for (var iterador = 0; iterador < 15; iterador++) {
+
+            var monster2 = factory.generarMonstruo('Zombie Normal');
+
+            // Anyadimos los zombies al grupo
+            this.game.add.existing(monster2);
+            this.game.monsters.add(monster2)
+        }
+    };
+
+    // Le damos las propiedades a las balas
+    private createBullets() {
+        this.game.bullets = this.add.group();
+        this.game.bullets.enableBody = true;
+        this.game.bullets.physicsBodyType = Phaser.Physics.ARCADE;
+        this.game.bullets.createMultiple(20, 'bullet');
+
+        this.game.bullets.setAll('anchor.x', 0.5);
+        this.game.bullets.setAll('anchor.y', 0.5);
+        this.game.bullets.setAll('scale.x', 0.5);
+        this.game.bullets.setAll('scale.y', 0.5);
+        this.game.bullets.setAll('outOfBoundsKill', true);
+        this.game.bullets.setAll('checkWorldBounds', true);
+    };
+
+    // Con este metodo se generan las explosiones, existen tres tipos y se escogen de manera al azar
+    private createExplosions() {
+        this.game.explosions = this.add.group();
+        this.game.explosions.createMultiple(20, 'explosion');
+
+        this.game.explosions.setAll('anchor.x', 0.5);
+        this.game.explosions.setAll('anchor.y', 0.5);
+
+        this.game.explosions.forEach((explosion:Phaser.Sprite) => {
+            explosion.loadTexture(this.rnd.pick(['explosion', 'explosion2', 'explosion3']));
+        }, this);
+    };
+
+    // Método con el que creamos los muros y marcamos los limites del mapa
+    private createWalls() {
+        this.game.walls = this.game.tilemap.createLayer('walls');
+        this.game.walls.x = this.world.centerX;
+        this.game.walls.y = this.world.centerY;
+        this.game.walls.resizeWorld();
+        this.game.tilemap.setCollisionBetween(1, 195, true, 'walls');
+    };
+
+    //---------------------------------------------------------
+    // Textos, mapa... Parte gráfica del juego
+    //---------------------------------------------------------
+
+    // En este metodo generamos los textos que mostraremos por pantalla
     private createTexts() {
 
-        // Mostramos los textos
         var width = this.scale.bounds.width;
         var height = this.scale.bounds.height;
 
@@ -133,28 +216,6 @@ class mainState extends Phaser.State {
         this.game.stateText.fixedToCamera = true;
     };
 
-    // Con este
-    private createExplosions() {
-        this.game.explosions = this.add.group();
-        this.game.explosions.createMultiple(20, 'explosion');
-
-        this.game.explosions.setAll('anchor.x', 0.5);
-        this.game.explosions.setAll('anchor.y', 0.5);
-
-        this.game.explosions.forEach((explosion:Phaser.Sprite) => {
-            explosion.loadTexture(this.rnd.pick(['explosion', 'explosion2', 'explosion3']));
-        }, this);
-    };
-
-    // Método con el que creamos los muros y asignamos su tilemap y
-    private createWalls() {
-        this.game.walls = this.game.tilemap.createLayer('walls');
-        this.game.walls.x = this.world.centerX;
-        this.game.walls.y = this.world.centerY;
-        this.game.walls.resizeWorld();
-        this.game.tilemap.setCollisionBetween(1, 195, true, 'walls');
-    };
-
     // Método con el que creamos el fondo y ajustamos las coordenadas
     private createBackground() {
         this.game.background = this.game.tilemap.createLayer('background');
@@ -162,171 +223,25 @@ class mainState extends Phaser.State {
         this.game.background.y = this.world.centerY;
     };
 
-
+    // Incorpora el mapa al juego a partir de un tileMap
     private createTilemap() {
         this.game.tilemap = this.game.add.tilemap('tilemap');
         this.game.tilemap.addTilesetImage('tilesheet_complete', 'tiles');
 
     };
 
-    private createMonsters() {
+    //---------------------------------------------------------
+    //  Movimiento jugador, monstruos y lógica general del juego
+    //---------------------------------------------------------
 
-        this.game.monsters = this.add.group();
-
-        // Instanciamos la clase factory que es con la que construiremos los zombies
-        var factory = new MonsterFactory(this.game);
-
-        // Generamos los zombies
-        for (var iterador = 0; iterador < 10; iterador++) {
-
-            var monster1 = factory.generarMonstruo('Zombie Runner');
-
-            // Anyadimos los zombies al grupo
-            this.game.add.existing(monster1);
-            this.game.monsters.add(monster1)
-        }
-
-        for (var iterador = 0; iterador < 15; iterador++) {
-
-            var monster2 = factory.generarMonstruo('Zombie Normal');
-
-            // Anyadimos los zombies al grupo
-            this.game.add.existing(monster2);
-            this.game.monsters.add(monster2)
-        }
-    };
+    // ----- Monstruos ------ //
 
     private setRandomAngle(monster:Phaser.Sprite) {
         monster.angle = this.rnd.angle();
     }
 
     private resetMonster(monster:Phaser.Sprite) {
-        monster.rotation = this.physics.arcade.angleBetween(
-            monster,
-            this.game.player
-        );
-    }
-
-    private createBullets() {
-        this.game.bullets = this.add.group();
-        this.game.bullets.enableBody = true;
-        this.game.bullets.physicsBodyType = Phaser.Physics.ARCADE;
-        this.game.bullets.createMultiple(20, 'bullet');
-
-        this.game.bullets.setAll('anchor.x', 0.5);
-        this.game.bullets.setAll('anchor.y', 0.5);
-        this.game.bullets.setAll('scale.x', 0.5);
-        this.game.bullets.setAll('scale.y', 0.5);
-        this.game.bullets.setAll('outOfBoundsKill', true);
-        this.game.bullets.setAll('checkWorldBounds', true);
-    };
-
-    private createVirtualJoystick() {
-        this.game.gamepad = new Gamepads.GamePad(this.game, Gamepads.GamepadType.DOUBLE_STICK);
-    };
-
-    private setupCamera() {
-        this.camera.follow(this.game.player);
-    };
-
-    private createPlayer() {
-
-        var jugador = new Player('J1', 5, this.game, this.world.centerX, this.world.centerY, 'player', 0);
-        this.game.player = this.add.existing(jugador);
-
-       // Nota: importante asignar el jugador con add.existing. Si se referencia directamente la variable puede causar problemas
-
-    };
-
-    update():void {
-        super.update();
-
-        this.movePlayer();
-        this.moveMonsters();
-
-        if (this.game.device.desktop) {
-            this.rotatePlayerToPointer();
-            this.fireWhenButtonClicked();
-        } else {
-            this.rotateWithRightStick();
-            this.fireWithRightStick();
-        }
-
-        // Colisiones
-        this.physics.arcade.collide(this.game.player, this.game.monsters, this.monsterTouchesPlayer, null, this);
-        this.physics.arcade.collide(this.game.player, this.game.walls);
-        this.physics.arcade.overlap(this.game.bullets, this.game.monsters, this.bulletHitMonster, null, this);
-        this.physics.arcade.collide(this.game.bullets, this.game.walls, this.bulletHitWall, null, this);
-        this.physics.arcade.collide(this.game.walls, this.game.monsters, this.resetMonster, null, this);
-        this.physics.arcade.collide(this.game.monsters, this.game.monsters, this.resetMonster, null, this);
-    }
-
-    rotateWithRightStick() {
-        var speed = this.game.gamepad.stick2.speed;
-
-        if (Math.abs(speed.x) + Math.abs(speed.y) > 20) {
-            var rotatePos = new Phaser.Point(this.game.player.x + speed.x, this.game.player.y + speed.y);
-            this.game.player.rotation = this.physics.arcade.angleToXY(this.game.player, rotatePos.x, rotatePos.y);
-
-            this.fire();
-        }
-    }
-
-    fireWithRightStick() {
-        //this.gamepad.stick2.
-    }
-
-    private monsterTouchesPlayer(player:Phaser.Sprite, monster:Phaser.Sprite) {
-        monster.kill();
-
-        player.damage(1);
-
-        this.game.livesText.setText("Lives: " + this.game.player.health);
-
-        this.blink(player);
-
-        if (player.health == 0) {
-            this.game.stateText.text = " GAME OVER \n Click to restart";
-            this.game.stateText.visible = true;
-
-            //the "click to restart" handler
-            this.input.onTap.addOnce(this.restart, this);
-        }
-    }
-
-    // Método para reiniciar el juego de cero (cuidado con las variables de puntuacion, vidas, etc...)
-    restart() {
-        this.game.state.restart();
-        this.game.score = 0;
-    }
-
-    private bulletHitWall(bullet:Phaser.Sprite, walls:Phaser.TilemapLayer) {
-        this.explosion(bullet.x, bullet.y);
-        bullet.kill();
-    }
-
-    private bulletHitMonster(bullet:Phaser.Sprite, monster:Phaser.Sprite) {
-        bullet.kill();
-        monster.damage(1);
-
-
-        this.explosion(bullet.x, bullet.y);
-
-        if (monster.health > 0) {
-            this.blink(monster)
-        } else {
-            this.game.score += 10;
-            // this.game.scoreText.setText("Score: " + this.game.score);
-        }
-    }
-
-    blink(sprite:Phaser.Sprite) {
-        var tween = this.add.tween(sprite)
-            .to({alpha: 0.5}, 100, Phaser.Easing.Bounce.Out)
-            .to({alpha: 1.0}, 100, Phaser.Easing.Bounce.Out);
-
-        tween.repeat(3);
-        tween.start();
+        monster.rotation = this.physics.arcade.angleBetween(monster, this.game.player);
     }
 
     // Función para mover los monstruos
@@ -339,20 +254,7 @@ class mainState extends Phaser.State {
         this.physics.arcade.velocityFromAngle(monster.angle, this.game.MONSTER_SPEED, monster.body.velocity);
     }
 
-    // Función con la que disparamos al hacer clic
-    private fireWhenButtonClicked() {
-        if (this.input.activePointer.isDown && this.game.player.health > 0) {
-            this.fire();
-        }
-    };
-
-    // Función con la que rotamos al jugador en dirección al puntero del ratón
-    private rotatePlayerToPointer() {
-        this.game.player.rotation = this.physics.arcade.angleToPointer(
-            this.game.player,
-            this.input.activePointer
-        );
-    };
+    // ------ Jugador ----- //
 
     // Función para mover jugador
     private movePlayer() {
@@ -401,6 +303,169 @@ class mainState extends Phaser.State {
         }
     };
 
+    // Función con la que rotamos al jugador en dirección al puntero del ratón
+    private rotatePlayerToPointer() {
+        this.game.player.rotation = this.physics.arcade.angleToPointer(
+            this.game.player,
+            this.input.activePointer
+        );
+    };
+
+    // ---- Cámara y controles ----//
+
+    private createVirtualJoystick() {
+        this.game.gamepad = new Gamepads.GamePad(this.game, Gamepads.GamepadType.DOUBLE_STICK);
+    };
+
+    private setupCamera() {
+        this.camera.follow(this.game.player);
+    };
+
+
+    //---------------------------------------------------------
+    //  Tweens, efectos, animaciones del juego.
+    //---------------------------------------------------------
+
+    explosion(x:number, y:number):void {
+
+        // Sacamos el primer sprite muerto del group
+        var explosion:Phaser.Sprite = this.game.explosions.getFirstDead();
+
+        if (explosion) {
+
+            // Colocamos la explosión con su transpariencia y posición
+            explosion.reset(
+                x - this.rnd.integerInRange(0, 5) + this.rnd.integerInRange(0, 5),
+                y - this.rnd.integerInRange(0, 5) + this.rnd.integerInRange(0, 5)
+            );
+            explosion.alpha = 0.6;
+            explosion.angle = this.rnd.angle();
+            explosion.scale.setTo(this.rnd.realInRange(0.5, 0.75));
+
+            // Hacemos que varíe su tamaño para dar la sensación de que el humo se disipa
+            this.add.tween(explosion.scale).to({x: 0, y: 0}, 500).start();
+            var tween = this.add.tween(explosion).to({alpha: 0}, 500);
+
+            // Una vez terminado matámos la explosión
+            tween.onComplete.add(() => {
+                explosion.kill();
+            });
+            tween.start();
+        }
+    }
+
+    blink(sprite:Phaser.Sprite) {
+        var tween = this.add.tween(sprite)
+            .to({alpha: 0.5}, 100, Phaser.Easing.Bounce.Out)
+            .to({alpha: 1.0}, 100, Phaser.Easing.Bounce.Out);
+
+        tween.repeat(3);
+        tween.start();
+    }
+
+    //---------------------------------------------------------
+    //  Colisiones y limites del mapa
+    //---------------------------------------------------------
+
+    private monsterTouchesPlayer(player:Phaser.Sprite, monster:Phaser.Sprite) {
+        monster.kill();
+
+        player.damage(1);
+
+        this.game.livesText.setText("Lives: " + this.game.player.health);
+
+        this.blink(player);
+
+        if (player.health == 0) {
+            this.game.stateText.text = " GAME OVER \n Click to restart";
+            this.game.stateText.visible = true;
+
+            //the "click to restart" handler
+            this.input.onTap.addOnce(this.restart, this);
+        }
+    }
+
+    private bulletHitWall(bullet:Phaser.Sprite, walls:Phaser.TilemapLayer) {
+        this.explosion(bullet.x, bullet.y);
+        bullet.kill();
+    }
+
+    private bulletHitMonster(bullet:Phaser.Sprite, monster:Phaser.Sprite) {
+        bullet.kill();
+        monster.damage(1);
+
+
+        this.explosion(bullet.x, bullet.y);
+
+        if (monster.health > 0) {
+            this.blink(monster)
+        } else {
+            this.game.score += 10;
+            // this.game.scoreText.setText("Score: " + this.game.score);
+        }
+    }
+
+    //---------------------------------------------------------
+    //  Update principal del juego
+    //---------------------------------------------------------
+
+    update():void {
+        super.update();
+
+        this.movePlayer();
+        this.moveMonsters();
+
+        // Controles
+        if (this.game.device.desktop) {
+            this.rotatePlayerToPointer();
+            this.fireWhenButtonClicked();
+        } else {
+            this.rotateWithRightStick();
+            this.fireWithRightStick();
+        }
+
+        // Colisiones
+        this.physics.arcade.collide(this.game.player, this.game.monsters, this.monsterTouchesPlayer, null, this);
+        this.physics.arcade.collide(this.game.player, this.game.walls);
+        this.physics.arcade.overlap(this.game.bullets, this.game.monsters, this.bulletHitMonster, null, this);
+        this.physics.arcade.collide(this.game.bullets, this.game.walls, this.bulletHitWall, null, this);
+        this.physics.arcade.collide(this.game.walls, this.game.monsters, this.resetMonster, null, this);
+        this.physics.arcade.collide(this.game.monsters, this.game.monsters, this.resetMonster, null, this);
+    }
+
+    // Método para reiniciar el juego de cero (cuidado con las variables de puntuacion, vidas, etc...)
+    restart() {
+        this.game.state.restart();
+        this.game.score = 0;
+    }
+
+
+    rotateWithRightStick() {
+        var speed = this.game.gamepad.stick2.speed;
+
+        if (Math.abs(speed.x) + Math.abs(speed.y) > 20) {
+            var rotatePos = new Phaser.Point(this.game.player.x + speed.x, this.game.player.y + speed.y);
+            this.game.player.rotation = this.physics.arcade.angleToXY(this.game.player, rotatePos.x, rotatePos.y);
+
+            this.fire();
+        }
+    }
+
+    //---------------------------------------------------------
+    // Balas y disparos
+    //---------------------------------------------------------
+
+    fireWithRightStick() {
+        //this.gamepad.stick2.
+    }
+
+    // Función con la que disparamos al hacer clic
+    private fireWhenButtonClicked() {
+        if (this.input.activePointer.isDown && this.game.player.health > 0) {
+            this.fire();
+        }
+    };
+
     // Función para disparar
     fire():void {
 
@@ -429,34 +494,6 @@ class mainState extends Phaser.State {
                 // Ajustamos la variable auxiliar nextFire usando la cadencia de fuego para saber cada cuando se puede disaprar
                 this.game.nextFire = this.time.now + this.game.FIRE_RATE;
             }
-        }
-    }
-
-    explosion(x:number, y:number):void {
-
-        // Sacamos el primer sprite muerto del group
-        var explosion:Phaser.Sprite = this.game.explosions.getFirstDead();
-
-        if (explosion) {
-
-            // Colocamos la explosión con su transpariencia y posición
-            explosion.reset(
-                x - this.rnd.integerInRange(0, 5) + this.rnd.integerInRange(0, 5),
-                y - this.rnd.integerInRange(0, 5) + this.rnd.integerInRange(0, 5)
-            );
-            explosion.alpha = 0.6;
-            explosion.angle = this.rnd.angle();
-            explosion.scale.setTo(this.rnd.realInRange(0.5, 0.75));
-
-            // Hacemos que varíe su tamaño para dar la sensación de que el humo se disipa
-            this.add.tween(explosion.scale).to({x: 0, y: 0}, 500).start();
-            var tween = this.add.tween(explosion).to({alpha: 0}, 500);
-
-            // Una vez terminado matámos la explosión
-            tween.onComplete.add(() => {
-                explosion.kill();
-            });
-            tween.start();
         }
     }
 }
@@ -524,7 +561,7 @@ class ZombieRunner extends Monster {
     // Els zombieRunner son més ràpids peró suporten menys trets
 
     constructor(game:ShooterGame, key:string|Phaser.RenderTexture|Phaser.BitmapData|PIXI.Texture)  {
-        super(game, 200, 200,key, 0);
+        super(game, 900, 150,key, 0);
 
         // Ajustamos el sprite
         this.anchor.setTo(0.5,0.5);

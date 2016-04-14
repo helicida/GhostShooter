@@ -1035,65 +1035,29 @@ var mainState = (function (_super) {
             this.createVirtualJoystick();
         }
     };
-    mainState.prototype.createTexts = function () {
-        // Mostramos los textos
-        var width = this.scale.bounds.width;
-        var height = this.scale.bounds.height;
-        this.game.scoreText = this.add.text(this.game.TEXT_MARGIN, this.game.TEXT_MARGIN, 'Score: ' + this.game.score, { font: "30px Arial", fill: "#ffffff" });
-        this.game.scoreText.fixedToCamera = true;
-        this.game.livesText = this.add.text(width - this.game.TEXT_MARGIN, this.game.TEXT_MARGIN, 'Lives: ' + this.game.player.health, { font: "30px Arial", fill: "#ffffff" });
-        this.game.livesText.anchor.setTo(1, 0);
-        this.game.livesText.fixedToCamera = true;
-        this.game.stateText = this.add.text(width / 2, height / 2, '', { font: '84px Arial', fill: '#fff' });
-        this.game.stateText.anchor.setTo(0.5, 0.5);
-        this.game.stateText.visible = false;
-        this.game.stateText.fixedToCamera = true;
+    //-------------------------------------------------------------------------------
+    // Create elementos fisicos: Jugadores, monstruos, balas y explosiones
+    //-------------------------------------------------------------------------------
+    // Jugador principal
+    mainState.prototype.createPlayer = function () {
+        var jugador = new Player('J1', 5, this.game, this.world.centerX, this.world.centerY, 'player', 0);
+        this.game.player = this.add.existing(jugador);
+        // Nota: importante asignar el jugador con add.existing. Si se referencia directamente la variable causará problemas
     };
     ;
-    // Con este
-    mainState.prototype.createExplosions = function () {
-        var _this = this;
-        this.game.explosions = this.add.group();
-        this.game.explosions.createMultiple(20, 'explosion');
-        this.game.explosions.setAll('anchor.x', 0.5);
-        this.game.explosions.setAll('anchor.y', 0.5);
-        this.game.explosions.forEach(function (explosion) {
-            explosion.loadTexture(_this.rnd.pick(['explosion', 'explosion2', 'explosion3']));
-        }, this);
-    };
-    ;
-    // Método con el que creamos los muros y asignamos su tilemap y
-    mainState.prototype.createWalls = function () {
-        this.game.walls = this.game.tilemap.createLayer('walls');
-        this.game.walls.x = this.world.centerX;
-        this.game.walls.y = this.world.centerY;
-        this.game.walls.resizeWorld();
-        this.game.tilemap.setCollisionBetween(1, 195, true, 'walls');
-    };
-    ;
-    // Método con el que creamos el fondo y ajustamos las coordenadas
-    mainState.prototype.createBackground = function () {
-        this.game.background = this.game.tilemap.createLayer('background');
-        this.game.background.x = this.world.centerX;
-        this.game.background.y = this.world.centerY;
-    };
-    ;
-    mainState.prototype.createTilemap = function () {
-        this.game.tilemap = this.game.add.tilemap('tilemap');
-        this.game.tilemap.addTilesetImage('tilesheet_complete', 'tiles');
-    };
-    ;
+    // Generamos los monstruos cdel tipo que nos interese
     mainState.prototype.createMonsters = function () {
         this.game.monsters = this.add.group();
         // Instanciamos la clase factory que es con la que construiremos los zombies
         var factory = new MonsterFactory(this.game);
-        // Generamos los zombies
+        // Generamos 10 zombies rápidos
         for (var iterador = 0; iterador < 10; iterador++) {
             var monster1 = factory.generarMonstruo('Zombie Runner');
             // Anyadimos los zombies al grupo
             this.game.add.existing(monster1);
             this.game.monsters.add(monster1);
         }
+        // Generamos 15 normales
         for (var iterador = 0; iterador < 15; iterador++) {
             var monster2 = factory.generarMonstruo('Zombie Normal');
             // Anyadimos los zombies al grupo
@@ -1102,12 +1066,7 @@ var mainState = (function (_super) {
         }
     };
     ;
-    mainState.prototype.setRandomAngle = function (monster) {
-        monster.angle = this.rnd.angle();
-    };
-    mainState.prototype.resetMonster = function (monster) {
-        monster.rotation = this.physics.arcade.angleBetween(monster, this.game.player);
-    };
+    // Le damos las propiedades a las balas
     mainState.prototype.createBullets = function () {
         this.game.bullets = this.add.group();
         this.game.bullets.enableBody = true;
@@ -1121,89 +1080,67 @@ var mainState = (function (_super) {
         this.game.bullets.setAll('checkWorldBounds', true);
     };
     ;
-    mainState.prototype.createVirtualJoystick = function () {
-        this.game.gamepad = new Gamepads.GamePad(this.game, Gamepads.GamepadType.DOUBLE_STICK);
+    // Con este metodo se generan las explosiones, existen tres tipos y se escogen de manera al azar
+    mainState.prototype.createExplosions = function () {
+        var _this = this;
+        this.game.explosions = this.add.group();
+        this.game.explosions.createMultiple(20, 'explosion');
+        this.game.explosions.setAll('anchor.x', 0.5);
+        this.game.explosions.setAll('anchor.y', 0.5);
+        this.game.explosions.forEach(function (explosion) {
+            explosion.loadTexture(_this.rnd.pick(['explosion', 'explosion2', 'explosion3']));
+        }, this);
     };
     ;
-    mainState.prototype.setupCamera = function () {
-        this.camera.follow(this.game.player);
+    // Método con el que creamos los muros y marcamos los limites del mapa
+    mainState.prototype.createWalls = function () {
+        this.game.walls = this.game.tilemap.createLayer('walls');
+        this.game.walls.x = this.world.centerX;
+        this.game.walls.y = this.world.centerY;
+        this.game.walls.resizeWorld();
+        this.game.tilemap.setCollisionBetween(1, 195, true, 'walls');
     };
     ;
-    mainState.prototype.createPlayer = function () {
-        var jugador = new Player('J1', 5, this.game, this.world.centerX, this.world.centerY, 'player', 0);
-        this.game.player = this.add.existing(jugador);
-        // Nota: importante asignar el jugador con add.existing. Si se referencia directamente la variable puede causar problemas
+    //---------------------------------------------------------
+    // Textos, mapa... Parte gráfica del juego
+    //---------------------------------------------------------
+    // En este metodo generamos los textos que mostraremos por pantalla
+    mainState.prototype.createTexts = function () {
+        var width = this.scale.bounds.width;
+        var height = this.scale.bounds.height;
+        this.game.scoreText = this.add.text(this.game.TEXT_MARGIN, this.game.TEXT_MARGIN, 'Score: ' + this.game.score, { font: "30px Arial", fill: "#ffffff" });
+        this.game.scoreText.fixedToCamera = true;
+        this.game.livesText = this.add.text(width - this.game.TEXT_MARGIN, this.game.TEXT_MARGIN, 'Lives: ' + this.game.player.health, { font: "30px Arial", fill: "#ffffff" });
+        this.game.livesText.anchor.setTo(1, 0);
+        this.game.livesText.fixedToCamera = true;
+        this.game.stateText = this.add.text(width / 2, height / 2, '', { font: '84px Arial', fill: '#fff' });
+        this.game.stateText.anchor.setTo(0.5, 0.5);
+        this.game.stateText.visible = false;
+        this.game.stateText.fixedToCamera = true;
     };
     ;
-    mainState.prototype.update = function () {
-        _super.prototype.update.call(this);
-        this.movePlayer();
-        this.moveMonsters();
-        if (this.game.device.desktop) {
-            this.rotatePlayerToPointer();
-            this.fireWhenButtonClicked();
-        }
-        else {
-            this.rotateWithRightStick();
-            this.fireWithRightStick();
-        }
-        // Colisiones
-        this.physics.arcade.collide(this.game.player, this.game.monsters, this.monsterTouchesPlayer, null, this);
-        this.physics.arcade.collide(this.game.player, this.game.walls);
-        this.physics.arcade.overlap(this.game.bullets, this.game.monsters, this.bulletHitMonster, null, this);
-        this.physics.arcade.collide(this.game.bullets, this.game.walls, this.bulletHitWall, null, this);
-        this.physics.arcade.collide(this.game.walls, this.game.monsters, this.resetMonster, null, this);
-        this.physics.arcade.collide(this.game.monsters, this.game.monsters, this.resetMonster, null, this);
+    // Método con el que creamos el fondo y ajustamos las coordenadas
+    mainState.prototype.createBackground = function () {
+        this.game.background = this.game.tilemap.createLayer('background');
+        this.game.background.x = this.world.centerX;
+        this.game.background.y = this.world.centerY;
     };
-    mainState.prototype.rotateWithRightStick = function () {
-        var speed = this.game.gamepad.stick2.speed;
-        if (Math.abs(speed.x) + Math.abs(speed.y) > 20) {
-            var rotatePos = new Phaser.Point(this.game.player.x + speed.x, this.game.player.y + speed.y);
-            this.game.player.rotation = this.physics.arcade.angleToXY(this.game.player, rotatePos.x, rotatePos.y);
-            this.fire();
-        }
+    ;
+    // Incorpora el mapa al juego a partir de un tileMap
+    mainState.prototype.createTilemap = function () {
+        this.game.tilemap = this.game.add.tilemap('tilemap');
+        this.game.tilemap.addTilesetImage('tilesheet_complete', 'tiles');
     };
-    mainState.prototype.fireWithRightStick = function () {
-        //this.gamepad.stick2.
+    ;
+    //---------------------------------------------------------
+    //  Movimiento jugador, monstruos y lógica general del juego
+    //---------------------------------------------------------
+    // ----- Monstruos ------ //
+    mainState.prototype.setRandomAngle = function (monster) {
+        monster.angle = this.rnd.angle();
     };
-    mainState.prototype.monsterTouchesPlayer = function (player, monster) {
-        monster.kill();
-        player.damage(1);
-        this.game.livesText.setText("Lives: " + this.game.player.health);
-        this.blink(player);
-        if (player.health == 0) {
-            this.game.stateText.text = " GAME OVER \n Click to restart";
-            this.game.stateText.visible = true;
-            //the "click to restart" handler
-            this.input.onTap.addOnce(this.restart, this);
-        }
-    };
-    // Método para reiniciar el juego de cero (cuidado con las variables de puntuacion, vidas, etc...)
-    mainState.prototype.restart = function () {
-        this.game.state.restart();
-        this.game.score = 0;
-    };
-    mainState.prototype.bulletHitWall = function (bullet, walls) {
-        this.explosion(bullet.x, bullet.y);
-        bullet.kill();
-    };
-    mainState.prototype.bulletHitMonster = function (bullet, monster) {
-        bullet.kill();
-        monster.damage(1);
-        this.explosion(bullet.x, bullet.y);
-        if (monster.health > 0) {
-            this.blink(monster);
-        }
-        else {
-            this.game.score += 10;
-        }
-    };
-    mainState.prototype.blink = function (sprite) {
-        var tween = this.add.tween(sprite)
-            .to({ alpha: 0.5 }, 100, Phaser.Easing.Bounce.Out)
-            .to({ alpha: 1.0 }, 100, Phaser.Easing.Bounce.Out);
-        tween.repeat(3);
-        tween.start();
+    mainState.prototype.resetMonster = function (monster) {
+        monster.rotation = this.physics.arcade.angleBetween(monster, this.game.player);
     };
     // Función para mover los monstruos
     mainState.prototype.moveMonsters = function () {
@@ -1214,18 +1151,7 @@ var mainState = (function (_super) {
     mainState.prototype.advanceStraightAhead = function (monster) {
         this.physics.arcade.velocityFromAngle(monster.angle, this.game.MONSTER_SPEED, monster.body.velocity);
     };
-    // Función con la que disparamos al hacer clic
-    mainState.prototype.fireWhenButtonClicked = function () {
-        if (this.input.activePointer.isDown && this.game.player.health > 0) {
-            this.fire();
-        }
-    };
-    ;
-    // Función con la que rotamos al jugador en dirección al puntero del ratón
-    mainState.prototype.rotatePlayerToPointer = function () {
-        this.game.player.rotation = this.physics.arcade.angleToPointer(this.game.player, this.input.activePointer);
-    };
-    ;
+    // ------ Jugador ----- //
     // Función para mover jugador
     mainState.prototype.movePlayer = function () {
         // Controles de teclado
@@ -1279,6 +1205,129 @@ var mainState = (function (_super) {
         }
     };
     ;
+    // Función con la que rotamos al jugador en dirección al puntero del ratón
+    mainState.prototype.rotatePlayerToPointer = function () {
+        this.game.player.rotation = this.physics.arcade.angleToPointer(this.game.player, this.input.activePointer);
+    };
+    ;
+    // ---- Cámara y controles ----//
+    mainState.prototype.createVirtualJoystick = function () {
+        this.game.gamepad = new Gamepads.GamePad(this.game, Gamepads.GamepadType.DOUBLE_STICK);
+    };
+    ;
+    mainState.prototype.setupCamera = function () {
+        this.camera.follow(this.game.player);
+    };
+    ;
+    //---------------------------------------------------------
+    //  Tweens, efectos, animaciones del juego.
+    //---------------------------------------------------------
+    mainState.prototype.explosion = function (x, y) {
+        // Sacamos el primer sprite muerto del group
+        var explosion = this.game.explosions.getFirstDead();
+        if (explosion) {
+            // Colocamos la explosión con su transpariencia y posición
+            explosion.reset(x - this.rnd.integerInRange(0, 5) + this.rnd.integerInRange(0, 5), y - this.rnd.integerInRange(0, 5) + this.rnd.integerInRange(0, 5));
+            explosion.alpha = 0.6;
+            explosion.angle = this.rnd.angle();
+            explosion.scale.setTo(this.rnd.realInRange(0.5, 0.75));
+            // Hacemos que varíe su tamaño para dar la sensación de que el humo se disipa
+            this.add.tween(explosion.scale).to({ x: 0, y: 0 }, 500).start();
+            var tween = this.add.tween(explosion).to({ alpha: 0 }, 500);
+            // Una vez terminado matámos la explosión
+            tween.onComplete.add(function () {
+                explosion.kill();
+            });
+            tween.start();
+        }
+    };
+    mainState.prototype.blink = function (sprite) {
+        var tween = this.add.tween(sprite)
+            .to({ alpha: 0.5 }, 100, Phaser.Easing.Bounce.Out)
+            .to({ alpha: 1.0 }, 100, Phaser.Easing.Bounce.Out);
+        tween.repeat(3);
+        tween.start();
+    };
+    //---------------------------------------------------------
+    //  Colisiones y limites del mapa
+    //---------------------------------------------------------
+    mainState.prototype.monsterTouchesPlayer = function (player, monster) {
+        monster.kill();
+        player.damage(1);
+        this.game.livesText.setText("Lives: " + this.game.player.health);
+        this.blink(player);
+        if (player.health == 0) {
+            this.game.stateText.text = " GAME OVER \n Click to restart";
+            this.game.stateText.visible = true;
+            //the "click to restart" handler
+            this.input.onTap.addOnce(this.restart, this);
+        }
+    };
+    mainState.prototype.bulletHitWall = function (bullet, walls) {
+        this.explosion(bullet.x, bullet.y);
+        bullet.kill();
+    };
+    mainState.prototype.bulletHitMonster = function (bullet, monster) {
+        bullet.kill();
+        monster.damage(1);
+        this.explosion(bullet.x, bullet.y);
+        if (monster.health > 0) {
+            this.blink(monster);
+        }
+        else {
+            this.game.score += 10;
+        }
+    };
+    //---------------------------------------------------------
+    //  Update principal del juego
+    //---------------------------------------------------------
+    mainState.prototype.update = function () {
+        _super.prototype.update.call(this);
+        this.movePlayer();
+        this.moveMonsters();
+        // Controles
+        if (this.game.device.desktop) {
+            this.rotatePlayerToPointer();
+            this.fireWhenButtonClicked();
+        }
+        else {
+            this.rotateWithRightStick();
+            this.fireWithRightStick();
+        }
+        // Colisiones
+        this.physics.arcade.collide(this.game.player, this.game.monsters, this.monsterTouchesPlayer, null, this);
+        this.physics.arcade.collide(this.game.player, this.game.walls);
+        this.physics.arcade.overlap(this.game.bullets, this.game.monsters, this.bulletHitMonster, null, this);
+        this.physics.arcade.collide(this.game.bullets, this.game.walls, this.bulletHitWall, null, this);
+        this.physics.arcade.collide(this.game.walls, this.game.monsters, this.resetMonster, null, this);
+        this.physics.arcade.collide(this.game.monsters, this.game.monsters, this.resetMonster, null, this);
+    };
+    // Método para reiniciar el juego de cero (cuidado con las variables de puntuacion, vidas, etc...)
+    mainState.prototype.restart = function () {
+        this.game.state.restart();
+        this.game.score = 0;
+    };
+    mainState.prototype.rotateWithRightStick = function () {
+        var speed = this.game.gamepad.stick2.speed;
+        if (Math.abs(speed.x) + Math.abs(speed.y) > 20) {
+            var rotatePos = new Phaser.Point(this.game.player.x + speed.x, this.game.player.y + speed.y);
+            this.game.player.rotation = this.physics.arcade.angleToXY(this.game.player, rotatePos.x, rotatePos.y);
+            this.fire();
+        }
+    };
+    //---------------------------------------------------------
+    // Balas y disparos
+    //---------------------------------------------------------
+    mainState.prototype.fireWithRightStick = function () {
+        //this.gamepad.stick2.
+    };
+    // Función con la que disparamos al hacer clic
+    mainState.prototype.fireWhenButtonClicked = function () {
+        if (this.input.activePointer.isDown && this.game.player.health > 0) {
+            this.fire();
+        }
+    };
+    ;
     // Función para disparar
     mainState.prototype.fire = function () {
         // Usamos un if para respetar la cadencia de disparo
@@ -1300,25 +1349,6 @@ var mainState = (function (_super) {
                 // Ajustamos la variable auxiliar nextFire usando la cadencia de fuego para saber cada cuando se puede disaprar
                 this.game.nextFire = this.time.now + this.game.FIRE_RATE;
             }
-        }
-    };
-    mainState.prototype.explosion = function (x, y) {
-        // Sacamos el primer sprite muerto del group
-        var explosion = this.game.explosions.getFirstDead();
-        if (explosion) {
-            // Colocamos la explosión con su transpariencia y posición
-            explosion.reset(x - this.rnd.integerInRange(0, 5) + this.rnd.integerInRange(0, 5), y - this.rnd.integerInRange(0, 5) + this.rnd.integerInRange(0, 5));
-            explosion.alpha = 0.6;
-            explosion.angle = this.rnd.angle();
-            explosion.scale.setTo(this.rnd.realInRange(0.5, 0.75));
-            // Hacemos que varíe su tamaño para dar la sensación de que el humo se disipa
-            this.add.tween(explosion.scale).to({ x: 0, y: 0 }, 500).start();
-            var tween = this.add.tween(explosion).to({ alpha: 0 }, 500);
-            // Una vez terminado matámos la explosión
-            tween.onComplete.add(function () {
-                explosion.kill();
-            });
-            tween.start();
         }
     };
     return mainState;
@@ -1368,7 +1398,7 @@ var ZombieRunner = (function (_super) {
     __extends(ZombieRunner, _super);
     // Els zombieRunner son més ràpids peró suporten menys trets
     function ZombieRunner(game, key) {
-        _super.call(this, game, 200, 200, key, 0);
+        _super.call(this, game, 900, 150, key, 0);
         // Ajustamos el sprite
         this.anchor.setTo(0.5, 0.5);
         this.angle = game.rnd.angle();
