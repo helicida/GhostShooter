@@ -990,8 +990,8 @@ var mainState = (function (_super) {
         this.load.image('bg', 'assets/bg.png');
         this.load.image('player', 'assets/survivor1_machine.png');
         this.load.image('bullet', 'assets/bulletBeigeSilver_outline.png');
-        this.load.image('zombie1', 'assets/zoimbie1_hold.png');
-        this.load.image('zombie2', 'assets/zombie2_hold.png');
+        this.load.image('Zombie Normal', 'assets/zoimbie1_hold.png');
+        this.load.image('Zombie Runner', 'assets/zombie2_hold.png');
         this.load.image('robot', 'assets/robot1_hold.png');
         this.load.image('explosion', 'assets/smokeWhite0.png');
         this.load.image('explosion2', 'assets/smokeWhite1.png');
@@ -1084,22 +1084,22 @@ var mainState = (function (_super) {
     };
     ;
     mainState.prototype.createMonsters = function () {
-        var _this = this;
         this.game.monsters = this.add.group();
-        this.game.monsters.enableBody = true;
-        this.game.monsters.physicsBodyType = Phaser.Physics.ARCADE;
-        this.game.tilemap.createFromObjects('monsters', 541, 'zombie1', 0, true, false, this.game.monsters);
-        this.game.monsters.setAll('anchor.x', 0.5);
-        this.game.monsters.setAll('anchor.y', 0.5);
-        //this.monsters.setAll('scale.x', 2);
-        //this.monsters.setAll('scale.y', 2);
-        this.game.monsters.setAll('health', this.game.MONSTER_HEALTH);
-        this.game.monsters.forEach(this.setRandomAngle, this);
-        this.game.monsters.forEach(function (explosion) {
-            explosion.loadTexture(_this.rnd.pick(['zombie1', 'zombie2', 'robot']));
-        }, this);
-        this.game.monsters.setAll('checkWorldBounds', true);
-        this.game.monsters.callAll('events.onOutOfBounds.add', 'events.onOutOfBounds', this.resetMonster, this);
+        // Instanciamos la clase factory que es con la que construiremos los zombies
+        var factory = new MonsterFactory(this.game);
+        // Generamos los zombies
+        for (var iterador = 0; iterador < 10; iterador++) {
+            var monster1 = factory.generarMonstruo('Zombie Runner');
+            // Anyadimos los zombies al grupo
+            this.game.add.existing(monster1);
+            this.game.monsters.add(monster1);
+        }
+        for (var iterador = 0; iterador < 15; iterador++) {
+            var monster2 = factory.generarMonstruo('Zombie Normal');
+            // Anyadimos los zombies al grupo
+            this.game.add.existing(monster2);
+            this.game.monsters.add(monster2);
+        }
     };
     ;
     mainState.prototype.setRandomAngle = function (monster) {
@@ -1147,6 +1147,7 @@ var mainState = (function (_super) {
             this.rotateWithRightStick();
             this.fireWithRightStick();
         }
+        // Colisiones
         this.physics.arcade.collide(this.game.player, this.game.monsters, this.monsterTouchesPlayer, null, this);
         this.physics.arcade.collide(this.game.player, this.game.walls);
         this.physics.arcade.overlap(this.game.bullets, this.game.monsters, this.bulletHitMonster, null, this);
@@ -1214,7 +1215,7 @@ var mainState = (function (_super) {
     };
     // Función con la que disparamos al hacer clic
     mainState.prototype.fireWhenButtonClicked = function () {
-        if (this.input.activePointer.isDown) {
+        if (this.input.activePointer.isDown && this.game.player.health > 0) {
             this.fire();
         }
     };
@@ -1321,9 +1322,87 @@ var mainState = (function (_super) {
     };
     return mainState;
 }(Phaser.State));
-//---------------------------------------------------------------- //
-// --------- Patrón Observer para la puntuación del jugador ------ //
-//---------------------------------------------------------------- //
+//---------------------------------------------------------------------- //
+// --------- Patrón Factory para el comportamiento de los zombies ------ //
+//---------------------------------------------------------------------- //
+var Monster = (function (_super) {
+    __extends(Monster, _super);
+    function Monster(game, x, y, key, frame) {
+        _super.call(this, game, x, y, key, frame);
+        this.game.physics.enable(this, Phaser.Physics.ARCADE);
+        this.body.enableBody = true;
+        this.game = game;
+        // En este caso no tenemos datos del Monstruo porque es una clase abstracta, los instanciaremos en las clases que hereden
+    }
+    Monster.prototype.update = function () {
+        _super.prototype.update.call(this);
+        // Lógica de los zombies de Carles
+        this.game.physics.arcade.velocityFromAngle(this.angle, this.velocidadMonstruo, this.body.velocity);
+        this.events.onOutOfBounds.add(this.resetMonster, this);
+    };
+    Monster.prototype.resetMonster = function (monster) {
+        monster.rotation = this.game.physics.arcade.angleBetween(monster, this.game.player);
+    };
+    return Monster;
+}(Phaser.Sprite));
+var ZombieNormal = (function (_super) {
+    __extends(ZombieNormal, _super);
+    // Zombie normal
+    function ZombieNormal(game, key) {
+        _super.call(this, game, 150, 150, key, 0);
+        // Ajustamos el sprite
+        this.anchor.setTo(0.5, 0.5);
+        this.angle = game.rnd.angle();
+        // Datos del monstruo
+        this.keyImagen = "Zombie Normal";
+        this.health = 3;
+        this.velocidadMonstruo = 100;
+    }
+    ZombieNormal.prototype.update = function () {
+        _super.prototype.update.call(this);
+    };
+    return ZombieNormal;
+}(Monster));
+var ZombieRunner = (function (_super) {
+    __extends(ZombieRunner, _super);
+    // Els zombieRunner son més ràpids peró suporten menys trets
+    function ZombieRunner(game, key) {
+        _super.call(this, game, 200, 200, key, 0);
+        // Ajustamos el sprite
+        this.anchor.setTo(0.5, 0.5);
+        this.angle = game.rnd.angle();
+        // Datos del monstruo
+        this.keyImagen = "Zombie Runner";
+        this.health = 2;
+        this.velocidadMonstruo = 250;
+    }
+    ZombieRunner.prototype.update = function () {
+        _super.prototype.update.call(this);
+    };
+    return ZombieRunner;
+}(Monster));
+var MonsterFactory = (function () {
+    // Constructores
+    function MonsterFactory(game) {
+        this.game = game;
+    }
+    // Con este metodo
+    MonsterFactory.prototype.generarMonstruo = function (key) {
+        if (key == 'Zombie Normal') {
+            return new ZombieNormal(this.game, key);
+        }
+        else if (key == 'Zombie Runner') {
+            return new ZombieRunner(this.game, key);
+        }
+        else {
+            return null;
+        }
+    };
+    return MonsterFactory;
+}());
+//------------------------------------------------------------------ //
+// --------- Patrón Observer para la puntuación del jugador -------- //
+//------------------------------------------------------------------ //
 var Player = (function (_super) {
     __extends(Player, _super);
     // Constructores
