@@ -957,6 +957,7 @@ var Gamepads;
 /// <reference path="phaser/phaser.d.ts"/>
 /// <reference path="joypad/GamePad.ts"/>
 var game = PIXI.game;
+var Point = Phaser.Point;
 var ShooterGame = (function (_super) {
     __extends(ShooterGame, _super);
     function ShooterGame() {
@@ -993,6 +994,7 @@ var mainState = (function (_super) {
         this.load.image('Zombie Normal', 'assets/zoimbie1_hold.png');
         this.load.image('Zombie Runner', 'assets/zombie2_hold.png');
         this.load.image('robot', 'assets/robot1_hold.png');
+        this.load.image('recolectable', 'assets/PickupLow.png');
         this.load.image('explosion', 'assets/smokeWhite0.png');
         this.load.image('explosion2', 'assets/smokeWhite1.png');
         this.load.image('explosion3', 'assets/smokeWhite2.png');
@@ -1027,6 +1029,7 @@ var mainState = (function (_super) {
         this.createBullets();
         this.createPlayer();
         this.setupCamera();
+        this.createRecolectables();
         this.createMonsters();
         // Importante crear en último lugar los textos para que el resto de elementos de la pantalla no los pisen
         this.createTexts();
@@ -1036,7 +1039,7 @@ var mainState = (function (_super) {
         }
     };
     //-------------------------------------------------------------------------------
-    // Create elementos fisicos: Jugadores, monstruos, balas y explosiones
+    // Create elementos fisicos: Jugadores, monstruos, balas, recolectables y explosiones
     //-------------------------------------------------------------------------------
     // Jugador principal
     mainState.prototype.createPlayer = function () {
@@ -1101,6 +1104,30 @@ var mainState = (function (_super) {
         this.game.tilemap.setCollisionBetween(1, 195, true, 'walls');
     };
     ;
+    mainState.prototype.createRecolectables = function () {
+        // Anyadimos el recolectable a un grupo
+        this.game.recolectables = this.add.group();
+        this.game.recolectables.enableBody = true;
+        // Posiciones en las que generaremos los recolectables
+        var positions = [
+            new Point(500, 295),
+            new Point(390, 335), new Point(610, 335),
+            new Point(320, 400), new Point(680, 400),
+            new Point(295, 500), new Point(705, 500),
+            new Point(320, 605), new Point(680, 605),
+            new Point(390, 665), new Point(610, 665),
+            new Point(500, 705),
+        ];
+        // Colocamos los sprites en sus coordenadas a traves de un for
+        for (var i = 0; i < positions.length; i++) {
+            var position = positions[i];
+            // instanciamos el Sprite
+            var recolectable = new PartesDelTesoro(this.game, "Pieza del tesoro", i, position.x, position.y, 'recolectable', 0);
+            // mostramos el Sprite por pantalla
+            this.add.existing(recolectable);
+            this.game.recolectables.add(recolectable);
+        }
+    };
     //---------------------------------------------------------
     // Textos, mapa... Parte gráfica del juego
     //---------------------------------------------------------
@@ -1205,6 +1232,14 @@ var mainState = (function (_super) {
         }
     };
     ;
+    mainState.prototype.rotateWithRightStick = function () {
+        var speed = this.game.gamepad.stick2.speed;
+        if (Math.abs(speed.x) + Math.abs(speed.y) > 20) {
+            var rotatePos = new Phaser.Point(this.game.player.x + speed.x, this.game.player.y + speed.y);
+            this.game.player.rotation = this.physics.arcade.angleToXY(this.game.player, rotatePos.x, rotatePos.y);
+            this.fire();
+        }
+    };
     // Función con la que rotamos al jugador en dirección al puntero del ratón
     mainState.prototype.rotatePlayerToPointer = function () {
         this.game.player.rotation = this.physics.arcade.angleToPointer(this.game.player, this.input.activePointer);
@@ -1278,6 +1313,10 @@ var mainState = (function (_super) {
             this.game.score += 10;
         }
     };
+    mainState.prototype.recogerRecolectable = function (player, recolectable) {
+        player.anyadirRecolectable(recolectable);
+        recolectable.kill(); // Nos cargamos el sprite
+    };
     //---------------------------------------------------------
     //  Update principal del juego
     //---------------------------------------------------------
@@ -1301,19 +1340,12 @@ var mainState = (function (_super) {
         this.physics.arcade.collide(this.game.bullets, this.game.walls, this.bulletHitWall, null, this);
         this.physics.arcade.collide(this.game.walls, this.game.monsters, this.resetMonster, null, this);
         this.physics.arcade.collide(this.game.monsters, this.game.monsters, this.resetMonster, null, this);
+        this.physics.arcade.overlap(this.game.player, this.game.recolectables, this.recogerRecolectable, null, this);
     };
     // Método para reiniciar el juego de cero (cuidado con las variables de puntuacion, vidas, etc...)
     mainState.prototype.restart = function () {
         this.game.state.restart();
         this.game.score = 0;
-    };
-    mainState.prototype.rotateWithRightStick = function () {
-        var speed = this.game.gamepad.stick2.speed;
-        if (Math.abs(speed.x) + Math.abs(speed.y) > 20) {
-            var rotatePos = new Phaser.Point(this.game.player.x + speed.x, this.game.player.y + speed.y);
-            this.game.player.rotation = this.physics.arcade.angleToXY(this.game.player, rotatePos.x, rotatePos.y);
-            this.fire();
-        }
     };
     //---------------------------------------------------------
     // Balas y disparos
@@ -1353,6 +1385,36 @@ var mainState = (function (_super) {
     };
     return mainState;
 }(Phaser.State));
+//------------------------------------------------------------------------ //
+// --------- Patrón Decorator para recoger coleccionables y extras ------- //
+//------------------------------------------------------------------------ //
+var Recolectable = (function (_super) {
+    __extends(Recolectable, _super);
+    // Constructor con una velocidad angular fija y las fisicas activadas
+    function Recolectable(game, tipoRecolectable, x, y, key, frame) {
+        _super.call(this, game, x, y, key, frame);
+        this.tipoRecolectable = tipoRecolectable;
+        // Sprite
+        this.game.physics.enable(this);
+    }
+    // Metodo update
+    Recolectable.prototype.update = function () {
+        _super.prototype.update.call(this);
+    };
+    return Recolectable;
+}(Phaser.Sprite));
+var PartesDelTesoro = (function (_super) {
+    __extends(PartesDelTesoro, _super);
+    function PartesDelTesoro(game, tipoRecolectable, numeroParteDelTesoro, x, y, key, frame) {
+        _super.call(this, game, tipoRecolectable, x, y, key, frame);
+        // Neceistamos todas las partes del tesoro
+        this.numeroParteDelTesoro = numeroParteDelTesoro;
+        // Sprite
+        this.anchor.setTo(0.5, 0.5);
+        this.body.angularVelocity = 150;
+    }
+    return PartesDelTesoro;
+}(Recolectable));
 //---------------------------------------------------------------------- //
 // --------- Patrón Factory para el comportamiento de los zombies ------ //
 //---------------------------------------------------------------------- //
@@ -1441,6 +1503,8 @@ var Player = (function (_super) {
         _super.call(this, game, x, y, key, frame);
         // Codigo al que suscribiremos nuestro jugador
         this.ScoreBackend = new ScoreBackend();
+        // Le vamos guardando a nuestro personaje los recolectables
+        this.Recolectables = [];
         this.puntuacion = 0; // Puntos que lleva
         // Ajustamos el sprite
         this.anchor.setTo(0.5, 0.5);
@@ -1463,6 +1527,10 @@ var Player = (function (_super) {
     // Metodos
     Player.prototype.notificarPuntuacion = function () {
         this.game.scoreText.setText("Score: " + this.game.score);
+    };
+    Player.prototype.anyadirRecolectable = function (recolectable) {
+        this.Recolectables[this.contador] = recolectable;
+        this.contador++;
     };
     // Getters
     Player.prototype.getId = function () {

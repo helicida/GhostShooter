@@ -2,6 +2,7 @@
 /// <reference path="joypad/GamePad.ts"/>
 
 import game = PIXI.game;
+import Point = Phaser.Point;
 class ShooterGame extends Phaser.Game {
 
     // Jugador, cursor y controles
@@ -18,6 +19,7 @@ class ShooterGame extends Phaser.Game {
     monsters:Phaser.Group;
     explosions:Phaser.Group;
     bullets:Phaser.Group;
+    recolectables:Phaser.Group; // Recolectables
 
     // Textos que mostramos en pantalla
     scoreText:Phaser.Text;
@@ -62,6 +64,7 @@ class mainState extends Phaser.State {
         this.load.image('Zombie Normal', 'assets/zoimbie1_hold.png');
         this.load.image('Zombie Runner', 'assets/zombie2_hold.png');
         this.load.image('robot', 'assets/robot1_hold.png');
+        this.load.image('recolectable', 'assets/PickupLow.png');
 
         this.load.image('explosion', 'assets/smokeWhite0.png');
         this.load.image('explosion2', 'assets/smokeWhite1.png');
@@ -102,6 +105,7 @@ class mainState extends Phaser.State {
         this.createBullets();
         this.createPlayer();
         this.setupCamera();
+        this.createRecolectables();
         this.createMonsters();
 
         // Importante crear en último lugar los textos para que el resto de elementos de la pantalla no los pisen
@@ -114,7 +118,7 @@ class mainState extends Phaser.State {
     }
 
     //-------------------------------------------------------------------------------
-    // Create elementos fisicos: Jugadores, monstruos, balas y explosiones
+    // Create elementos fisicos: Jugadores, monstruos, balas, recolectables y explosiones
     //-------------------------------------------------------------------------------
 
     // Jugador principal
@@ -191,6 +195,37 @@ class mainState extends Phaser.State {
         this.game.walls.resizeWorld();
         this.game.tilemap.setCollisionBetween(1, 195, true, 'walls');
     };
+
+    createRecolectables():void {
+
+        // Anyadimos el recolectable a un grupo
+        this.game.recolectables = this.add.group();
+        this.game.recolectables.enableBody = true;
+
+        // Posiciones en las que generaremos los recolectables
+        var positions:Point[] = [
+            new Point(500, 295),
+            new Point(390, 335), new Point(610, 335),
+            new Point(320, 400), new Point(680, 400),
+            new Point(295, 500), new Point(705, 500),
+            new Point(320, 605), new Point(680, 605),
+            new Point(390, 665), new Point(610, 665),
+            new Point(500, 705),
+        ];
+
+        // Colocamos los sprites en sus coordenadas a traves de un for
+        for (var i = 0; i < positions.length; i++) {
+
+            var position = positions[i];
+
+            // instanciamos el Sprite
+            var recolectable = new PartesDelTesoro(this.game, "Pieza del tesoro", i, position.x, position.y, 'recolectable', 0);
+
+            // mostramos el Sprite por pantalla
+            this.add.existing(recolectable);
+            this.game.recolectables.add(recolectable);
+        }
+    }
 
     //---------------------------------------------------------
     // Textos, mapa... Parte gráfica del juego
@@ -303,6 +338,17 @@ class mainState extends Phaser.State {
         }
     };
 
+    rotateWithRightStick() {
+        var speed = this.game.gamepad.stick2.speed;
+
+        if (Math.abs(speed.x) + Math.abs(speed.y) > 20) {
+            var rotatePos = new Phaser.Point(this.game.player.x + speed.x, this.game.player.y + speed.y);
+            this.game.player.rotation = this.physics.arcade.angleToXY(this.game.player, rotatePos.x, rotatePos.y);
+
+            this.fire();
+        }
+    }
+
     // Función con la que rotamos al jugador en dirección al puntero del ratón
     private rotatePlayerToPointer() {
         this.game.player.rotation = this.physics.arcade.angleToPointer(
@@ -405,6 +451,11 @@ class mainState extends Phaser.State {
         }
     }
 
+    private recogerRecolectable(player:Player, recolectable:Recolectable) {
+        player.anyadirRecolectable(recolectable);
+        recolectable.kill();    // Nos cargamos el sprite
+    }
+
     //---------------------------------------------------------
     //  Update principal del juego
     //---------------------------------------------------------
@@ -431,24 +482,13 @@ class mainState extends Phaser.State {
         this.physics.arcade.collide(this.game.bullets, this.game.walls, this.bulletHitWall, null, this);
         this.physics.arcade.collide(this.game.walls, this.game.monsters, this.resetMonster, null, this);
         this.physics.arcade.collide(this.game.monsters, this.game.monsters, this.resetMonster, null, this);
+        this.physics.arcade.overlap(this.game.player, this.game.recolectables, this.recogerRecolectable, null, this);
     }
 
     // Método para reiniciar el juego de cero (cuidado con las variables de puntuacion, vidas, etc...)
     restart() {
         this.game.state.restart();
         this.game.score = 0;
-    }
-
-
-    rotateWithRightStick() {
-        var speed = this.game.gamepad.stick2.speed;
-
-        if (Math.abs(speed.x) + Math.abs(speed.y) > 20) {
-            var rotatePos = new Phaser.Point(this.game.player.x + speed.x, this.game.player.y + speed.y);
-            this.game.player.rotation = this.physics.arcade.angleToXY(this.game.player, rotatePos.x, rotatePos.y);
-
-            this.fire();
-        }
     }
 
     //---------------------------------------------------------
@@ -497,6 +537,48 @@ class mainState extends Phaser.State {
         }
     }
 }
+
+//------------------------------------------------------------------------ //
+// --------- Patrón Decorator para recoger coleccionables y extras ------- //
+//------------------------------------------------------------------------ //
+abstract class Recolectable extends Phaser.Sprite{
+
+    tipoRecolectable:string;
+
+    // Constructor con una velocidad angular fija y las fisicas activadas
+    constructor(game:Phaser.Game, tipoRecolectable:string, x:number, y:number, key:string|Phaser.RenderTexture|Phaser.BitmapData|PIXI.Texture, frame:string|number) {
+        super(game, x, y, key, frame);
+
+        this.tipoRecolectable = tipoRecolectable;
+
+        // Sprite
+        this.game.physics.enable(this);
+    }
+
+    // Metodo update
+    update():void {
+        super.update();
+
+    }
+}
+
+class PartesDelTesoro extends Recolectable {
+
+    numeroParteDelTesoro:number;
+
+    constructor(game:Phaser.Game, tipoRecolectable:string, numeroParteDelTesoro:number, x:number, y:number, key:string|Phaser.RenderTexture|Phaser.BitmapData|PIXI.Texture, frame:string|number) {
+        super(game, tipoRecolectable, x, y, key, frame);
+
+        // Neceistamos todas las partes del tesoro
+        this.numeroParteDelTesoro = numeroParteDelTesoro;
+
+        // Sprite
+        this.anchor.setTo(0.5, 0.5);
+        this.body.angularVelocity = 150;
+
+    }
+}
+
 
 //---------------------------------------------------------------------- //
 // --------- Patrón Factory para el comportamiento de los zombies ------ //
@@ -615,6 +697,10 @@ class Player extends Phaser.Sprite {
     // Codigo al que suscribiremos nuestro jugador
     ScoreBackend:ScoreBackend = new ScoreBackend();
 
+    // Le vamos guardando a nuestro personaje los recolectables
+    Recolectables:Array<Recolectable> = [];
+    contador:number; // Contador para saber en que posicion del arrayEscribir
+
     // Variables
     id:string;              // ID con la que identificaremos al jugador
     puntuacion:number = 0;  // Puntos que lleva
@@ -646,9 +732,13 @@ class Player extends Phaser.Sprite {
     }
 
     // Metodos
-
     notificarPuntuacion():void {
          this.game.scoreText.setText("Score: " + this.game.score);
+    }
+
+    anyadirRecolectable(recolectable:Recolectable)  {
+        this.Recolectables[this.contador] = recolectable;
+        this.contador++;
     }
 
     // Getters
