@@ -1135,6 +1135,8 @@ var mainState = (function (_super) {
     mainState.prototype.createTexts = function () {
         var width = this.scale.bounds.width;
         var height = this.scale.bounds.height;
+        this.game.recolectableText = this.add.text(300, 20, 'Recolectables: ', { font: "30px Arial", fill: "#ffffff" });
+        this.game.recolectableText.fixedToCamera = true;
         this.game.scoreText = this.add.text(this.game.TEXT_MARGIN, this.game.TEXT_MARGIN, 'Score: ' + this.game.score, { font: "30px Arial", fill: "#ffffff" });
         this.game.scoreText.fixedToCamera = true;
         this.game.livesText = this.add.text(width - this.game.TEXT_MARGIN, this.game.TEXT_MARGIN, 'Lives: ' + this.game.player.health, { font: "30px Arial", fill: "#ffffff" });
@@ -1313,9 +1315,12 @@ var mainState = (function (_super) {
             this.game.score += 10;
         }
     };
-    mainState.prototype.recogerRecolectable = function (player, recolectable) {
-        player.anyadirRecolectable(recolectable);
-        recolectable.kill(); // Nos cargamos el sprite
+    mainState.prototype.recogerTesoro = function (player, recolectable) {
+        // Anyadimos el recolectable al array
+        player.anyadirTesoro(recolectable);
+        player.mostrarTextoRecolectables();
+        // Nos cargamos el sprite
+        recolectable.kill();
     };
     //---------------------------------------------------------
     //  Update principal del juego
@@ -1340,7 +1345,7 @@ var mainState = (function (_super) {
         this.physics.arcade.collide(this.game.bullets, this.game.walls, this.bulletHitWall, null, this);
         this.physics.arcade.collide(this.game.walls, this.game.monsters, this.resetMonster, null, this);
         this.physics.arcade.collide(this.game.monsters, this.game.monsters, this.resetMonster, null, this);
-        this.physics.arcade.overlap(this.game.player, this.game.recolectables, this.recogerRecolectable, null, this);
+        this.physics.arcade.overlap(this.game.player, this.game.recolectables, this.recogerTesoro, null, this);
     };
     // Método para reiniciar el juego de cero (cuidado con las variables de puntuacion, vidas, etc...)
     mainState.prototype.restart = function () {
@@ -1401,6 +1406,10 @@ var Recolectable = (function (_super) {
     Recolectable.prototype.update = function () {
         _super.prototype.update.call(this);
     };
+    // Getters
+    Recolectable.prototype.getTipoRecolectable = function () {
+        return this.tipoRecolectable;
+    };
     return Recolectable;
 }(Phaser.Sprite));
 var PartesDelTesoro = (function (_super) {
@@ -1413,6 +1422,10 @@ var PartesDelTesoro = (function (_super) {
         this.anchor.setTo(0.5, 0.5);
         this.body.angularVelocity = 150;
     }
+    // Getters
+    PartesDelTesoro.prototype.getNumeroParteDelTesoro = function () {
+        return this.numeroParteDelTesoro;
+    };
     return PartesDelTesoro;
 }(Recolectable));
 //---------------------------------------------------------------------- //
@@ -1504,7 +1517,7 @@ var Player = (function (_super) {
         // Codigo al que suscribiremos nuestro jugador
         this.ScoreBackend = new ScoreBackend();
         // Le vamos guardando a nuestro personaje los recolectables
-        this.Recolectables = [];
+        this.partesDelTesoro = [];
         this.puntuacion = 0; // Puntos que lleva
         // Ajustamos el sprite
         this.anchor.setTo(0.5, 0.5);
@@ -1528,9 +1541,16 @@ var Player = (function (_super) {
     Player.prototype.notificarPuntuacion = function () {
         this.game.scoreText.setText("Score: " + this.game.score);
     };
-    Player.prototype.anyadirRecolectable = function (recolectable) {
-        this.Recolectables[this.contador] = recolectable;
+    Player.prototype.anyadirTesoro = function (recolectable) {
+        this.partesDelTesoro[this.contador] = recolectable;
         this.contador++;
+    };
+    Player.prototype.mostrarTextoRecolectables = function () {
+        var textoRecolectables;
+        for (var iterador = 0; iterador < this.partesDelTesoro.length; iterador++) {
+            textoRecolectables = textoRecolectables + "Tesoro " + this.partesDelTesoro[iterador].getNumeroParteDelTesoro() + " - ";
+        }
+        this.game.recolectableText.setText("Recolectables: " + textoRecolectables);
     };
     // Getters
     Player.prototype.getId = function () {

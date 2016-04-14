@@ -25,6 +25,7 @@ class ShooterGame extends Phaser.Game {
     scoreText:Phaser.Text;
     livesText:Phaser.Text;
     stateText:Phaser.Text;
+    recolectableText:Phaser.Text;
 
     // Constantes
     PLAYER_ACCELERATION = 500;  // aceleración del jugador
@@ -236,6 +237,11 @@ class mainState extends Phaser.State {
 
         var width = this.scale.bounds.width;
         var height = this.scale.bounds.height;
+
+        this.game.recolectableText = this.add.text(300, 20, 'Recolectables: ',
+            {font: "30px Arial", fill: "#ffffff"});
+        this.game.recolectableText.fixedToCamera = true;
+
 
         this.game.scoreText = this.add.text(this.game.TEXT_MARGIN, this.game.TEXT_MARGIN, 'Score: ' + this.game.score,
             {font: "30px Arial", fill: "#ffffff"});
@@ -451,9 +457,14 @@ class mainState extends Phaser.State {
         }
     }
 
-    private recogerRecolectable(player:Player, recolectable:Recolectable) {
-        player.anyadirRecolectable(recolectable);
-        recolectable.kill();    // Nos cargamos el sprite
+    private recogerTesoro(player:Player, recolectable:PartesDelTesoro) {
+
+        // Anyadimos el recolectable al array
+        player.anyadirTesoro(recolectable);
+        player.mostrarTextoRecolectables();
+
+        // Nos cargamos el sprite
+        recolectable.kill();
     }
 
     //---------------------------------------------------------
@@ -482,7 +493,7 @@ class mainState extends Phaser.State {
         this.physics.arcade.collide(this.game.bullets, this.game.walls, this.bulletHitWall, null, this);
         this.physics.arcade.collide(this.game.walls, this.game.monsters, this.resetMonster, null, this);
         this.physics.arcade.collide(this.game.monsters, this.game.monsters, this.resetMonster, null, this);
-        this.physics.arcade.overlap(this.game.player, this.game.recolectables, this.recogerRecolectable, null, this);
+        this.physics.arcade.overlap(this.game.player, this.game.recolectables, this.recogerTesoro, null, this);
     }
 
     // Método para reiniciar el juego de cero (cuidado con las variables de puntuacion, vidas, etc...)
@@ -560,6 +571,11 @@ abstract class Recolectable extends Phaser.Sprite{
         super.update();
 
     }
+
+    // Getters
+    getTipoRecolectable():String{
+        return this.tipoRecolectable;
+    }
 }
 
 class PartesDelTesoro extends Recolectable {
@@ -576,6 +592,11 @@ class PartesDelTesoro extends Recolectable {
         this.anchor.setTo(0.5, 0.5);
         this.body.angularVelocity = 150;
 
+    }
+
+    // Getters
+    getNumeroParteDelTesoro():number{
+        return this.numeroParteDelTesoro;
     }
 }
 
@@ -698,7 +719,7 @@ class Player extends Phaser.Sprite {
     ScoreBackend:ScoreBackend = new ScoreBackend();
 
     // Le vamos guardando a nuestro personaje los recolectables
-    Recolectables:Array<Recolectable> = [];
+    partesDelTesoro:Array<PartesDelTesoro> = [];
     contador:number; // Contador para saber en que posicion del arrayEscribir
 
     // Variables
@@ -736,9 +757,19 @@ class Player extends Phaser.Sprite {
          this.game.scoreText.setText("Score: " + this.game.score);
     }
 
-    anyadirRecolectable(recolectable:Recolectable)  {
-        this.Recolectables[this.contador] = recolectable;
+    anyadirTesoro(recolectable:PartesDelTesoro)  {
+        this.partesDelTesoro[this.contador] = recolectable;
         this.contador++;
+    }
+
+    mostrarTextoRecolectables(){
+        var textoRecolectables;
+
+        for (var iterador = 0; iterador < this.partesDelTesoro.length; iterador++) {
+            textoRecolectables = textoRecolectables + "Tesoro " + this.partesDelTesoro[iterador].getNumeroParteDelTesoro() + " - ";
+        }
+
+        this.game.recolectableText.setText("Recolectables: " + textoRecolectables);
     }
 
     // Getters
