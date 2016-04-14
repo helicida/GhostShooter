@@ -1178,9 +1178,10 @@ var mainState = (function (_super) {
             this.input.onTap.addOnce(this.restart, this);
         }
     };
-    // metodo para reiniciar el juego de cero (cuidado con las variables)
+    // Método para reiniciar el juego de cero (cuidado con las variables de puntuacion, vidas, etc...)
     mainState.prototype.restart = function () {
         this.game.state.restart();
+        this.game.score = 0;
     };
     mainState.prototype.bulletHitWall = function (bullet, walls) {
         this.explosion(bullet.x, bullet.y);

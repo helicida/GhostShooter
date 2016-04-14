@@ -294,9 +294,10 @@ class mainState extends Phaser.State {
         }
     }
 
-    // metodo para reiniciar el juego de cero (cuidado con las variables)
+    // Método para reiniciar el juego de cero (cuidado con las variables de puntuacion, vidas, etc...)
     restart() {
         this.game.state.restart();
+        this.game.score = 0;
     }
 
     private bulletHitWall(bullet:Phaser.Sprite, walls:Phaser.TilemapLayer) {
