@@ -995,6 +995,7 @@ var mainState = (function (_super) {
         this.load.image('Zombie Runner', 'assets/zombie2_hold.png');
         this.load.image('robot', 'assets/robot1_hold.png');
         this.load.image('recolectable', 'assets/PickupLow.png');
+        this.load.image('angryZombie', 'assets/angryZombie.png');
         this.load.image('explosion', 'assets/smokeWhite0.png');
         this.load.image('explosion2', 'assets/smokeWhite1.png');
         this.load.image('explosion3', 'assets/smokeWhite2.png');
@@ -1329,6 +1330,10 @@ var mainState = (function (_super) {
         _super.prototype.update.call(this);
         this.movePlayer();
         this.moveMonsters();
+        // Determina el comportamiento de los zombis
+        if (this.game.monsters.countLiving() < 15) {
+            this.game.monsters.callAll('setComportamiento', null, new Enfadado());
+        }
         // Controles
         if (this.game.device.desktop) {
             this.rotatePlayerToPointer();
@@ -1434,8 +1439,11 @@ var PartesDelTesoro = (function (_super) {
 //---------------------------------------------------------------------- //
 var Monster = (function (_super) {
     __extends(Monster, _super);
+    // Constructores
     function Monster(game, x, y, key, frame) {
         _super.call(this, game, x, y, key, frame);
+        // Comportamiento
+        this.comportamiento = new NoEnfadado();
         this.game.physics.enable(this, Phaser.Physics.ARCADE);
         this.body.enableBody = true;
         this.game = game;
@@ -1447,8 +1455,22 @@ var Monster = (function (_super) {
         this.game.physics.arcade.velocityFromAngle(this.angle, this.velocidadMonstruo, this.body.velocity);
         this.events.onOutOfBounds.add(this.resetMonster, this);
     };
+    // Metodos
     Monster.prototype.resetMonster = function (monster) {
         monster.rotation = this.game.physics.arcade.angleBetween(monster, this.game.player);
+    };
+    // Setters
+    Monster.prototype.setComportamiento = function (comportamiento) {
+        this.comportamiento = comportamiento;
+        if (this.comportamiento.velocidad != null && this.comportamiento.key != null) {
+            this.velocidadMonstruo = this.comportamiento.velocidad;
+            this.loadTexture(this.comportamiento.key);
+        }
+    };
+    Monster.prototype.setEnfadado = function (valor) {
+        if (valor == true) {
+            this.setComportamiento(new Enfadado());
+        }
     };
     return Monster;
 })(Phaser.Sprite);
@@ -1587,6 +1609,20 @@ var ScoreBackend = (function () {
         this.contador++;
     };
     return ScoreBackend;
+})();
+var NoEnfadado = (function () {
+    function NoEnfadado() {
+        this.key = null;
+        this.velocidad = null;
+    }
+    return NoEnfadado;
+})();
+var Enfadado = (function () {
+    function Enfadado() {
+        this.key = "angryZombie";
+        this.velocidad = 300;
+    }
+    return Enfadado;
 })();
 window.onload = function () {
     new ShooterGame();

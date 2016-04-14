@@ -66,6 +66,7 @@ class mainState extends Phaser.State {
         this.load.image('Zombie Runner', 'assets/zombie2_hold.png');
         this.load.image('robot', 'assets/robot1_hold.png');
         this.load.image('recolectable', 'assets/PickupLow.png');
+        this.load.image('angryZombie', 'assets/angryZombie.png')
 
         this.load.image('explosion', 'assets/smokeWhite0.png');
         this.load.image('explosion2', 'assets/smokeWhite1.png');
@@ -446,7 +447,6 @@ class mainState extends Phaser.State {
         bullet.kill();
         monster.damage(1);
 
-
         this.explosion(bullet.x, bullet.y);
 
         if (monster.health > 0) {
@@ -477,11 +477,17 @@ class mainState extends Phaser.State {
         this.movePlayer();
         this.moveMonsters();
 
+        // Determina el comportamiento de los zombis
+        if(this.game.monsters.countLiving() < 15){
+            this.game.monsters.callAll('setComportamiento', null, new Enfadado());
+        }
+
         // Controles
         if (this.game.device.desktop) {
             this.rotatePlayerToPointer();
             this.fireWhenButtonClicked();
-        } else {
+        }
+        else {
             this.rotateWithRightStick();
             this.fireWithRightStick();
         }
@@ -610,10 +616,14 @@ abstract class Monster extends Phaser.Sprite {
     // Instanciamos el juego
     game:ShooterGame;
 
+    // Comportamiento
+    comportamiento:Comportamiento = new NoEnfadado();
+
     // Variables
     keyImagen:string;
     velocidadMonstruo:number;
 
+    // Constructores
     constructor(game:ShooterGame, x:number, y:number, key:string|Phaser.RenderTexture|Phaser.BitmapData|PIXI.Texture, frame:string|number)  {
         super(game, x, y, key, frame);
 
@@ -632,8 +642,25 @@ abstract class Monster extends Phaser.Sprite {
         this.events.onOutOfBounds.add(this.resetMonster, this);
     }
 
+    // Metodos
     resetMonster(monster:Phaser.Sprite) {
         monster.rotation = this.game.physics.arcade.angleBetween(monster, this.game.player);
+    }
+
+    // Setters
+    setComportamiento(comportamiento:Comportamiento):void {
+        this.comportamiento = comportamiento;
+
+        if(this.comportamiento.velocidad != null && this.comportamiento.key != null){
+            this.velocidadMonstruo = this.comportamiento.velocidad;
+            this.loadTexture(this.comportamiento.key);
+        }
+    }
+
+    setEnfadado(valor:boolean) {
+        if(valor == true){
+            this.setComportamiento(new Enfadado());
+        }
     }
 }
 
@@ -770,9 +797,6 @@ class Player extends Phaser.Sprite {
             this.game.recolectableText.setText("Recolectables: " + textoRecolectables);
 
         }
-
-
-
     }
 
     // Getters
@@ -815,6 +839,41 @@ class ScoreBackend {
     suscribirJugador(player:Player) {
         this.jugadores[this.contador] = player;
         this.contador++;
+    }
+}
+
+//-------------------------------------------------------------------------- //
+// --------- Patrón Strategy para el comportamiento de los enemigos -------- //
+//-------------------------------------------------------------------------- //
+
+interface Comportamiento {
+
+    key:string;
+    velocidad:number;
+}
+
+
+class NoEnfadado implements Comportamiento {
+
+    game:ShooterGame;
+
+    key:string = null;
+    velocidad:number = null;
+
+    constructor() {
+
+    }
+}
+
+class Enfadado implements Comportamiento {
+
+    game:ShooterGame;
+
+    key:string = "angryZombie";
+    velocidad:number = 300;
+
+    constructor() {
+
     }
 }
 
