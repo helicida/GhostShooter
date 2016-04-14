@@ -1,6 +1,7 @@
 /// <reference path="phaser/phaser.d.ts"/>
 /// <reference path="joypad/GamePad.ts"/>
 
+import game = PIXI.game;
 class ShooterGame extends Phaser.Game {
 
     // Jugador, cursor y controles
@@ -450,6 +451,7 @@ class mainState extends Phaser.State {
     }
 }
 
+
 //---------------------------------------------------------------- //
 // --------- Patrón Observer para la puntuación del jugador ------ //
 //---------------------------------------------------------------- //
@@ -494,8 +496,8 @@ class Player extends Phaser.Sprite {
 
     // Metodos
 
-    notificarPuntuacion(puntos:number):void {
-         this.game.scoreText.setText("Score: " + puntos);
+    notificarPuntuacion():void {
+         this.game.scoreText.setText("Score: " + this.game.score);
     }
 
     // Getters
@@ -510,7 +512,7 @@ class Player extends Phaser.Sprite {
 }
 
 class ScoreBackend {
-
+    
     // Array que contiene todos los jugadores suscritos
     jugadores:Array<Player> = [];
 
@@ -518,7 +520,8 @@ class ScoreBackend {
     contador:number = 0;
     
     // Constructor
-    constructor(){}
+    constructor(){
+    }
     
     // Update
     update(jugador:Player):void {
@@ -528,7 +531,7 @@ class ScoreBackend {
 
             // Y si lo está notificamos al jugador el canvio pertinente
             if (this.jugadores[iterador].id == jugador.id) {
-               // jugador.notificarPuntuacion(this.game.score);
+               jugador.notificarPuntuacion();
             }
         }
     }

@@ -956,6 +956,7 @@ var Gamepads;
 })(Gamepads || (Gamepads = {}));
 /// <reference path="phaser/phaser.d.ts"/>
 /// <reference path="joypad/GamePad.ts"/>
+var game = PIXI.game;
 var ShooterGame = (function (_super) {
     __extends(ShooterGame, _super);
     function ShooterGame() {
@@ -1350,8 +1351,8 @@ var Player = (function (_super) {
         this.ScoreBackend.update(this);
     };
     // Metodos
-    Player.prototype.notificarPuntuacion = function (puntos) {
-        this.game.scoreText.setText("Score: " + puntos);
+    Player.prototype.notificarPuntuacion = function () {
+        this.game.scoreText.setText("Score: " + this.game.score);
     };
     // Getters
     Player.prototype.getId = function () {
@@ -1376,6 +1377,7 @@ var ScoreBackend = (function () {
         for (var iterador = 0; iterador < this.jugadores.length; iterador++) {
             // Y si lo está notificamos al jugador el canvio pertinente
             if (this.jugadores[iterador].id == jugador.id) {
+                jugador.notificarPuntuacion();
             }
         }
     };
