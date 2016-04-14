@@ -1,8 +1,3 @@
-var __extends = (this && this.__extends) || function (d, b) {
-    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
-    function __() { this.constructor = d; }
-    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-};
 /**
  * Phaser joystick plugin.
  * Usage: In your preloader function call the static method preloadAssets. It will handle the preload of the necessary
@@ -12,6 +7,11 @@ var __extends = (this && this.__extends) || function (d, b) {
  * Use the speed dictionary to retrieve the input speed (if you are going to use an analog joystick)
  */
 /// <reference path="../phaser/phaser.d.ts"/>
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+};
 var Gamepads;
 (function (Gamepads) {
     (function (Sectors) {
@@ -295,7 +295,7 @@ var Gamepads;
             game.load.image('joystick_knob', assets_path + '/joystick_knob.png');
         };
         return Joystick;
-    }(Phaser.Plugin));
+    })(Phaser.Plugin);
     Gamepads.Joystick = Joystick;
 })(Gamepads || (Gamepads = {}));
 /// <reference path="../phaser/phaser.d.ts"/>
@@ -350,7 +350,7 @@ var Gamepads;
                 this.lineToRadians(pj * (Math.PI * 2) + this.rotation, radius);
         };
         return PieMask;
-    }(Phaser.Graphics));
+    })(Phaser.Graphics);
     Gamepads.PieMask = PieMask;
 })(Gamepads || (Gamepads = {}));
 /// <reference path="../phaser/phaser.d.ts"/>
@@ -472,7 +472,7 @@ var Gamepads;
             }
         };
         return Button;
-    }(Phaser.Plugin));
+    })(Phaser.Plugin);
     Gamepads.Button = Button;
 })(Gamepads || (Gamepads = {}));
 /// <reference path="Button.ts"/>
@@ -719,7 +719,7 @@ var Gamepads;
             game.load.image('button5', assets_path + '/button5.png');
         };
         return ButtonPad;
-    }(Phaser.Plugin));
+    })(Phaser.Plugin);
     Gamepads.ButtonPad = ButtonPad;
 })(Gamepads || (Gamepads = {}));
 /// <reference path="../phaser/phaser.d.ts"/>
@@ -865,7 +865,7 @@ var Gamepads;
             game.load.image('joystick_knob', assets_path + '/joystick_knob.png');
         };
         return TouchInput;
-    }(Phaser.Plugin));
+    })(Phaser.Plugin);
     Gamepads.TouchInput = TouchInput;
 })(Gamepads || (Gamepads = {}));
 /// <reference path="../phaser/phaser.d.ts"/>
@@ -951,7 +951,7 @@ var Gamepads;
             Gamepads.ButtonPad.preloadAssets(game, assets_path);
         };
         return GamePad;
-    }(Phaser.Plugin));
+    })(Phaser.Plugin);
     Gamepads.GamePad = GamePad;
 })(Gamepads || (Gamepads = {}));
 /// <reference path="phaser/phaser.d.ts"/>
@@ -979,7 +979,7 @@ var ShooterGame = (function (_super) {
         this.state.start('main');
     }
     return ShooterGame;
-}(Phaser.Game));
+})(Phaser.Game);
 var mainState = (function (_super) {
     __extends(mainState, _super);
     function mainState() {
@@ -1135,7 +1135,7 @@ var mainState = (function (_super) {
     mainState.prototype.createTexts = function () {
         var width = this.scale.bounds.width;
         var height = this.scale.bounds.height;
-        this.game.recolectableText = this.add.text(300, 20, 'Recolectables: ', { font: "30px Arial", fill: "#ffffff" });
+        this.game.recolectableText = this.add.text(30, 20, 'Recolectables: ', { font: "15px Arial", fill: "#ffffff" });
         this.game.recolectableText.fixedToCamera = true;
         this.game.scoreText = this.add.text(this.game.TEXT_MARGIN, this.game.TEXT_MARGIN, 'Score: ' + this.game.score, { font: "30px Arial", fill: "#ffffff" });
         this.game.scoreText.fixedToCamera = true;
@@ -1389,7 +1389,7 @@ var mainState = (function (_super) {
         }
     };
     return mainState;
-}(Phaser.State));
+})(Phaser.State);
 //------------------------------------------------------------------------ //
 // --------- Patrón Decorator para recoger coleccionables y extras ------- //
 //------------------------------------------------------------------------ //
@@ -1411,11 +1411,12 @@ var Recolectable = (function (_super) {
         return this.tipoRecolectable;
     };
     return Recolectable;
-}(Phaser.Sprite));
+})(Phaser.Sprite);
 var PartesDelTesoro = (function (_super) {
     __extends(PartesDelTesoro, _super);
     function PartesDelTesoro(game, tipoRecolectable, numeroParteDelTesoro, x, y, key, frame) {
         _super.call(this, game, tipoRecolectable, x, y, key, frame);
+        this.numeroParteDelTesoro = 0;
         // Neceistamos todas las partes del tesoro
         this.numeroParteDelTesoro = numeroParteDelTesoro;
         // Sprite
@@ -1427,7 +1428,7 @@ var PartesDelTesoro = (function (_super) {
         return this.numeroParteDelTesoro;
     };
     return PartesDelTesoro;
-}(Recolectable));
+})(Recolectable);
 //---------------------------------------------------------------------- //
 // --------- Patrón Factory para el comportamiento de los zombies ------ //
 //---------------------------------------------------------------------- //
@@ -1450,7 +1451,7 @@ var Monster = (function (_super) {
         monster.rotation = this.game.physics.arcade.angleBetween(monster, this.game.player);
     };
     return Monster;
-}(Phaser.Sprite));
+})(Phaser.Sprite);
 var ZombieNormal = (function (_super) {
     __extends(ZombieNormal, _super);
     // Zombie normal
@@ -1468,7 +1469,7 @@ var ZombieNormal = (function (_super) {
         _super.prototype.update.call(this);
     };
     return ZombieNormal;
-}(Monster));
+})(Monster);
 var ZombieRunner = (function (_super) {
     __extends(ZombieRunner, _super);
     // Els zombieRunner son més ràpids peró suporten menys trets
@@ -1486,7 +1487,7 @@ var ZombieRunner = (function (_super) {
         _super.prototype.update.call(this);
     };
     return ZombieRunner;
-}(Monster));
+})(Monster);
 var MonsterFactory = (function () {
     // Constructores
     function MonsterFactory(game) {
@@ -1505,7 +1506,7 @@ var MonsterFactory = (function () {
         }
     };
     return MonsterFactory;
-}());
+})();
 //------------------------------------------------------------------ //
 // --------- Patrón Observer para la puntuación del jugador -------- //
 //------------------------------------------------------------------ //
@@ -1518,6 +1519,7 @@ var Player = (function (_super) {
         this.ScoreBackend = new ScoreBackend();
         // Le vamos guardando a nuestro personaje los recolectables
         this.partesDelTesoro = [];
+        this.contador = 0; // Contador para saber en que posicion del arrayEscribir
         this.puntuacion = 0; // Puntos que lleva
         // Ajustamos el sprite
         this.anchor.setTo(0.5, 0.5);
@@ -1546,11 +1548,11 @@ var Player = (function (_super) {
         this.contador++;
     };
     Player.prototype.mostrarTextoRecolectables = function () {
-        var textoRecolectables;
+        var textoRecolectables = "";
         for (var iterador = 0; iterador < this.partesDelTesoro.length; iterador++) {
             textoRecolectables = textoRecolectables + "Tesoro " + this.partesDelTesoro[iterador].getNumeroParteDelTesoro() + " - ";
+            this.game.recolectableText.setText("Recolectables: " + textoRecolectables);
         }
-        this.game.recolectableText.setText("Recolectables: " + textoRecolectables);
     };
     // Getters
     Player.prototype.getId = function () {
@@ -1560,7 +1562,7 @@ var Player = (function (_super) {
         return this.puntuacion;
     };
     return Player;
-}(Phaser.Sprite));
+})(Phaser.Sprite);
 var ScoreBackend = (function () {
     // Constructor
     function ScoreBackend() {
@@ -1585,7 +1587,7 @@ var ScoreBackend = (function () {
         this.contador++;
     };
     return ScoreBackend;
-}());
+})();
 window.onload = function () {
     new ShooterGame();
 };

@@ -238,8 +238,8 @@ class mainState extends Phaser.State {
         var width = this.scale.bounds.width;
         var height = this.scale.bounds.height;
 
-        this.game.recolectableText = this.add.text(300, 20, 'Recolectables: ',
-            {font: "30px Arial", fill: "#ffffff"});
+        this.game.recolectableText = this.add.text(30, 20, 'Recolectables: ',
+            {font: "15px Arial", fill: "#ffffff"});
         this.game.recolectableText.fixedToCamera = true;
 
 
@@ -580,7 +580,7 @@ abstract class Recolectable extends Phaser.Sprite{
 
 class PartesDelTesoro extends Recolectable {
 
-    numeroParteDelTesoro:number;
+    numeroParteDelTesoro:number=0;
 
     constructor(game:Phaser.Game, tipoRecolectable:string, numeroParteDelTesoro:number, x:number, y:number, key:string|Phaser.RenderTexture|Phaser.BitmapData|PIXI.Texture, frame:string|number) {
         super(game, tipoRecolectable, x, y, key, frame);
@@ -720,7 +720,7 @@ class Player extends Phaser.Sprite {
 
     // Le vamos guardando a nuestro personaje los recolectables
     partesDelTesoro:Array<PartesDelTesoro> = [];
-    contador:number; // Contador para saber en que posicion del arrayEscribir
+    contador:number=0; // Contador para saber en que posicion del arrayEscribir
 
     // Variables
     id:string;              // ID con la que identificaremos al jugador
@@ -763,13 +763,16 @@ class Player extends Phaser.Sprite {
     }
 
     mostrarTextoRecolectables(){
-        var textoRecolectables;
+        var textoRecolectables="";
 
         for (var iterador = 0; iterador < this.partesDelTesoro.length; iterador++) {
             textoRecolectables = textoRecolectables + "Tesoro " + this.partesDelTesoro[iterador].getNumeroParteDelTesoro() + " - ";
+            this.game.recolectableText.setText("Recolectables: " + textoRecolectables);
+
         }
 
-        this.game.recolectableText.setText("Recolectables: " + textoRecolectables);
+
+
     }
 
     // Getters
