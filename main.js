@@ -968,9 +968,7 @@ var ShooterGame = (function (_super) {
         this.PLAYER_DRAG = 600; // rozamiento del jugador
         this.MONSTER_SPEED = 100; // velocidad de los monstruos
         this.BULLET_SPEED = 800; // velocidad de las balas
-        this.MONSTER_HEALTH = 3; // golpes que aguantan los monstruos
         this.FIRE_RATE = 200; // cadencia de disparo
-        this.LIVES = 3; // vidas
         this.TEXT_MARGIN = 50; // margen de los textos
         // Variables
         this.nextFire = 0; // Variable auxiliar para calcular el tiempo de disparo

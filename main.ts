@@ -33,9 +33,7 @@ class ShooterGame extends Phaser.Game {
     PLAYER_DRAG = 600;          // rozamiento del jugador
     MONSTER_SPEED = 100;        // velocidad de los monstruos
     BULLET_SPEED = 800;         // velocidad de las balas
-    MONSTER_HEALTH = 3;         // golpes que aguantan los monstruos
     FIRE_RATE = 200;            // cadencia de disparo
-    LIVES = 3;                  // vidas
     TEXT_MARGIN = 50;           // margen de los textos
 
     // Variables
