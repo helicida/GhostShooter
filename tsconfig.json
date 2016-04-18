@@ -7,6 +7,21 @@
     "out": "main.js"
   },
   "files": [
+    "GameObjects/Decorator/Recolectable.ts",
+    "GameObjects/Decorator/ParteDelTesoro.ts",
+    "GameObjects/Factory/Monster.ts",
+    "GameObjects/Factory/ZombieNormal.ts",
+    "GameObjects/Factory/ZombieRunner.ts",
+    "GameObjects/Factory/MonsterFactory.ts",
+    "GameObjects/Factory/Monster.ts",
+    "GameObjects/Observer/Player.ts",
+    "GameObjects/Observer/ScoreBackend.ts",
+    "GameObjects/Strategy/Comportamiento.ts",
+    "GameObjects/Strategy/Enfadado.ts",
+    "GameObjects/Strategy/NoEnfadado.ts",
+    "Stages/BootState.ts",
+    "Stages/LoadState.ts",
+    "Stages/PlayState.ts",
     "main.ts",
     "phaser/phaser.d.ts",
     "GamePad.ts"

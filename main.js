@@ -1,3 +1,780 @@
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+};
+/**
+ * Created by 46465442z on 18/04/16.
+ */
+var MyGame;
+(function (MyGame) {
+    var Recolectable = (function (_super) {
+        __extends(Recolectable, _super);
+        // Constructor con una velocidad angular fija y las fisicas activadas
+        function Recolectable(game, tipoRecolectable, x, y, key, frame) {
+            _super.call(this, game, x, y, key, frame);
+            this.tipoRecolectable = tipoRecolectable;
+            // Sprite
+            this.game.physics.enable(this);
+        }
+        // Metodo update
+        Recolectable.prototype.update = function () {
+            _super.prototype.update.call(this);
+        };
+        // Getters
+        Recolectable.prototype.getTipoRecolectable = function () {
+            return this.tipoRecolectable;
+        };
+        return Recolectable;
+    })(Phaser.Sprite);
+    MyGame.Recolectable = Recolectable;
+})(MyGame || (MyGame = {}));
+/**
+ * Created by 46465442z on 18/04/16.
+ */
+var MyGame;
+(function (MyGame) {
+    var PartesDelTesoro = (function (_super) {
+        __extends(PartesDelTesoro, _super);
+        function PartesDelTesoro(game, tipoRecolectable, numeroParteDelTesoro, x, y, key, frame) {
+            _super.call(this, game, tipoRecolectable, x, y, key, frame);
+            this.numeroParteDelTesoro = 0;
+            // Neceistamos todas las partes del tesoro
+            this.numeroParteDelTesoro = numeroParteDelTesoro;
+            // Sprite
+            this.anchor.setTo(0.5, 0.5);
+            this.body.angularVelocity = 150;
+        }
+        // Getters
+        PartesDelTesoro.prototype.getNumeroParteDelTesoro = function () {
+            return this.numeroParteDelTesoro;
+        };
+        return PartesDelTesoro;
+    })(MyGame.Recolectable);
+    MyGame.PartesDelTesoro = PartesDelTesoro;
+})(MyGame || (MyGame = {}));
+/**
+ * Created by 46465442z on 18/04/16.
+ */
+var MyGame;
+(function (MyGame) {
+    var Monster = (function (_super) {
+        __extends(Monster, _super);
+        // Constructores
+        function Monster(game, x, y, key, frame) {
+            _super.call(this, game, x, y, key, frame);
+            // Comportamiento
+            this.comportamiento = new MyGame.NoEnfadado();
+            this.game.physics.enable(this, Phaser.Physics.ARCADE);
+            this.body.enableBody = true;
+            this.game = game;
+            // En este caso no tenemos datos del Monstruo porque es una clase abstracta, los instanciaremos en las clases que hereden
+        }
+        Monster.prototype.update = function () {
+            _super.prototype.update.call(this);
+            // Lógica de los zombies de Carles
+            this.game.physics.arcade.velocityFromAngle(this.angle, this.velocidadMonstruo, this.body.velocity);
+            this.events.onOutOfBounds.add(this.resetMonster, this);
+        };
+        // Metodos
+        Monster.prototype.resetMonster = function (monster) {
+            monster.rotation = this.game.physics.arcade.angleBetween(monster, this.game.player);
+        };
+        // Setters
+        Monster.prototype.setComportamiento = function (comportamiento) {
+            this.comportamiento = comportamiento;
+            if (this.comportamiento.velocidad != null && this.comportamiento.key != null) {
+                this.velocidadMonstruo = this.comportamiento.velocidad;
+                this.loadTexture(this.comportamiento.key);
+            }
+        };
+        Monster.prototype.setEnfadado = function (valor) {
+            if (valor == true) {
+                this.setComportamiento(new MyGame.Enfadado());
+            }
+        };
+        return Monster;
+    })(Phaser.Sprite);
+    MyGame.Monster = Monster;
+})(MyGame || (MyGame = {}));
+/**
+ * Created by 46465442z on 18/04/16.
+ */
+var MyGame;
+(function (MyGame) {
+    var ZombieNormal = (function (_super) {
+        __extends(ZombieNormal, _super);
+        // Zombie normal
+        function ZombieNormal(game, key) {
+            _super.call(this, game, 150, 150, key, 0);
+            // Ajustamos el sprite
+            this.anchor.setTo(0.5, 0.5);
+            this.angle = game.rnd.angle();
+            // Datos del monstruo
+            this.keyImagen = "Zombie Normal";
+            this.health = 3;
+            this.velocidadMonstruo = 100;
+        }
+        ZombieNormal.prototype.update = function () {
+            _super.prototype.update.call(this);
+        };
+        return ZombieNormal;
+    })(MyGame.Monster);
+    MyGame.ZombieNormal = ZombieNormal;
+})(MyGame || (MyGame = {}));
+/**
+ * Created by 46465442z on 18/04/16.
+ */
+var MyGame;
+(function (MyGame) {
+    var ZombieRunner = (function (_super) {
+        __extends(ZombieRunner, _super);
+        // Els zombieRunner son més ràpids peró suporten menys trets
+        function ZombieRunner(game, key) {
+            _super.call(this, game, 900, 150, key, 0);
+            // Ajustamos el sprite
+            this.anchor.setTo(0.5, 0.5);
+            this.angle = game.rnd.angle();
+            // Datos del monstruo
+            this.keyImagen = "Zombie Runner";
+            this.health = 2;
+            this.velocidadMonstruo = 250;
+        }
+        ZombieRunner.prototype.update = function () {
+            _super.prototype.update.call(this);
+        };
+        return ZombieRunner;
+    })(MyGame.Monster);
+    MyGame.ZombieRunner = ZombieRunner;
+})(MyGame || (MyGame = {}));
+/**
+ * Created by 46465442z on 18/04/16.
+ */
+var MyGame;
+(function (MyGame) {
+    var MonsterFactory = (function () {
+        // Constructores
+        function MonsterFactory(game) {
+            this.game = game;
+        }
+        // Con este metodo
+        MonsterFactory.prototype.generarMonstruo = function (key) {
+            if (key == 'Zombie Normal') {
+                return new MyGame.ZombieNormal(this.game, key);
+            }
+            else if (key == 'Zombie Runner') {
+                return new MyGame.ZombieRunner(this.game, key);
+            }
+            else {
+                return null;
+            }
+        };
+        return MonsterFactory;
+    })();
+    MyGame.MonsterFactory = MonsterFactory;
+})(MyGame || (MyGame = {}));
+/**
+ * Created by 46465442z on 18/04/16.
+ */
+var MyGame;
+(function (MyGame) {
+    var Player = (function (_super) {
+        __extends(Player, _super);
+        // Constructores
+        function Player(id, numeroVidas, game, x, y, key, frame) {
+            _super.call(this, game, x, y, key, frame);
+            // Codigo al que suscribiremos nuestro jugador
+            this.ScoreBackend = new MyGame.ScoreBackend();
+            // Le vamos guardando a nuestro personaje los recolectables
+            this.partesDelTesoro = [];
+            this.contador = 0; // Contador para saber en que posicion del arrayEscribir
+            this.puntuacion = 0; // Puntos que lleva
+            // Ajustamos el sprite
+            this.anchor.setTo(0.5, 0.5);
+            this.game.physics.enable(this, Phaser.Physics.ARCADE);
+            this.body.maxVelocity.setTo(this.game.PLAYER_MAX_SPEED, this.game.PLAYER_MAX_SPEED);
+            this.body.collideWorldBounds = true;
+            this.body.drag.setTo(this.game.PLAYER_DRAG, this.game.PLAYER_DRAG);
+            // Datos del jugador
+            this.game = game;
+            this.id = id;
+            this.health = numeroVidas;
+            // Finalmente suscribimos el jugador a nuestro codigo que monitoriza las puntuaciones
+            this.ScoreBackend.suscribirJugador(this);
+        }
+        // Update
+        Player.prototype.update = function () {
+            _super.prototype.update.call(this);
+            this.ScoreBackend.update(this);
+        };
+        // Metodos
+        Player.prototype.notificarPuntuacion = function () {
+            this.game.scoreText.setText("Score: " + this.game.score);
+        };
+        Player.prototype.anyadirTesoro = function (recolectable) {
+            this.partesDelTesoro[this.contador] = recolectable;
+            this.contador++;
+        };
+        Player.prototype.mostrarTextoRecolectables = function () {
+            var textoRecolectables = "";
+            for (var iterador = 0; iterador < this.partesDelTesoro.length; iterador++) {
+                textoRecolectables = textoRecolectables + "Tesoro " + this.partesDelTesoro[iterador].getNumeroParteDelTesoro() + " - ";
+                this.game.recolectableText.setText("Recolectables: " + textoRecolectables);
+            }
+        };
+        // Getters
+        Player.prototype.getId = function () {
+            return this.id;
+        };
+        Player.prototype.getPuntuacion = function () {
+            return this.puntuacion;
+        };
+        return Player;
+    })(Phaser.Sprite);
+    MyGame.Player = Player;
+})(MyGame || (MyGame = {}));
+/**
+ * Created by 46465442z on 18/04/16.
+ */
+var MyGame;
+(function (MyGame) {
+    var ScoreBackend = (function () {
+        // Constructor
+        function ScoreBackend() {
+            // Array que contiene todos los jugadores suscritos
+            this.jugadores = [];
+            // Contador auxiliar para saber en que posición del array escribir
+            this.contador = 0;
+        }
+        // Update
+        ScoreBackend.prototype.update = function (jugador) {
+            // Comprobamos si el jugador que recibimos está suscrito, es decir, si figura en el array
+            for (var iterador = 0; iterador < this.jugadores.length; iterador++) {
+                // Y si lo está notificamos al jugador el canvio pertinente
+                if (this.jugadores[iterador].id == jugador.id) {
+                    jugador.notificarPuntuacion();
+                }
+            }
+        };
+        // Metodos
+        ScoreBackend.prototype.suscribirJugador = function (player) {
+            this.jugadores[this.contador] = player;
+            this.contador++;
+        };
+        return ScoreBackend;
+    })();
+    MyGame.ScoreBackend = ScoreBackend;
+})(MyGame || (MyGame = {}));
+/**
+ * Created by 46465442z on 18/04/16.
+ */
+var MyGame;
+(function (MyGame) {
+    var Enfadado = (function () {
+        function Enfadado() {
+            this.key = "angryZombie";
+            this.velocidad = 300;
+        }
+        return Enfadado;
+    })();
+    MyGame.Enfadado = Enfadado;
+})(MyGame || (MyGame = {}));
+/**
+ * Created by 46465442z on 18/04/16.
+ */
+var MyGame;
+(function (MyGame) {
+    var NoEnfadado = (function () {
+        function NoEnfadado() {
+            this.key = null;
+            this.velocidad = null;
+        }
+        return NoEnfadado;
+    })();
+    MyGame.NoEnfadado = NoEnfadado;
+})(MyGame || (MyGame = {}));
+/**
+ * Created by 46465442z on 18/04/16.
+ */
+var MyGame;
+(function (MyGame) {
+    var BootState = (function (_super) {
+        __extends(BootState, _super);
+        function BootState() {
+            _super.apply(this, arguments);
+        }
+        BootState.prototype.preload = function () {
+            _super.prototype.preload.call(this);
+            this.load.image('progressBar', 'assets/progressBar.png');
+        };
+        BootState.prototype.create = function () {
+            _super.prototype.create.call(this);
+            this.inicializaCampoDeJuego();
+            this.game.state.start('load');
+        };
+        BootState.prototype.inicializaCampoDeJuego = function () {
+            this.stage.backgroundColor = "#000000";
+            this.physics.startSystem(Phaser.Physics.ARCADE);
+        };
+        ;
+        return BootState;
+    })(Phaser.State);
+    MyGame.BootState = BootState;
+})(MyGame || (MyGame = {}));
+/**
+ * Created by 46465442z on 18/04/16.
+ */
+var MyGame;
+(function (MyGame) {
+    var LoadState = (function (_super) {
+        __extends(LoadState, _super);
+        function LoadState() {
+            _super.apply(this, arguments);
+        }
+        LoadState.prototype.preload = function () {
+            _super.prototype.preload.call(this);
+            // Agregamos un texto de cargando a la pantalla
+            var etiquetaCargando = this.add.text(this.world.centerX, 150, 'Cargando...', { font: '30px Arial', fill: '#ffffff' });
+            etiquetaCargando.anchor.setTo(0.5, 0.5);
+            // Muestra la barra de progreso
+            var progressBar = this.add.sprite(this.world.centerX, 200, 'progressBar');
+            progressBar.anchor.setTo(0.5, 0.5);
+            this.load.setPreloadSprite(progressBar);
+            // Cargamos las imagenes y el json que incorpora el Tile
+            this.load.image('bg', 'assets/bg.png');
+            this.load.image('player', 'assets/survivor1_machine.png');
+            this.load.image('bullet', 'assets/bulletBeigeSilver_outline.png');
+            this.load.image('Zombie Normal', 'assets/zoimbie1_hold.png');
+            this.load.image('Zombie Runner', 'assets/zombie2_hold.png');
+            this.load.image('robot', 'assets/robot1_hold.png');
+            this.load.image('recolectable', 'assets/PickupLow.png');
+            this.load.image('angryZombie', 'assets/angryZombie.png');
+            this.load.image('explosion', 'assets/smokeWhite0.png');
+            this.load.image('explosion2', 'assets/smokeWhite1.png');
+            this.load.image('explosion3', 'assets/smokeWhite2.png');
+            this.load.tilemap('tilemap', 'assets/tiles.json', null, Phaser.Tilemap.TILED_JSON);
+            this.load.image('tiles', 'assets/tilesheet_complete.png');
+            this.load.image('joystick_base', 'assets/transparentDark05.png');
+            this.load.image('joystick_segment', 'assets/transparentDark09.png');
+            this.load.image('joystick_knob', 'assets/transparentDark49.png');
+        };
+        LoadState.prototype.create = function () {
+            _super.prototype.create.call(this);
+            this.game.state.start('play');
+        };
+        return LoadState;
+    })(Phaser.State);
+    MyGame.LoadState = LoadState;
+})(MyGame || (MyGame = {}));
+/**
+ * Created by 46465442z on 18/04/16.
+ */
+var MyGame;
+(function (MyGame) {
+    var Point = Phaser.Point;
+    var PlayState = (function (_super) {
+        __extends(PlayState, _super);
+        function PlayState() {
+            _super.apply(this, arguments);
+        }
+        PlayState.prototype.preload = function () {
+            _super.prototype.preload.call(this);
+            // Arrancamos el sistema de físicas
+            this.physics.startSystem(Phaser.Physics.ARCADE);
+            // Comprobamos la plataforma y ajustamos las teclas y las dimensiones de la pantalla
+            if (this.game.device.desktop) {
+                this.game.cursors = this.input.keyboard.createCursorKeys();
+            }
+            else {
+                this.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL;
+                this.scale.pageAlignHorizontally = true;
+                this.scale.pageAlignVertically = true;
+                this.scale.pageAlignHorizontally = true;
+                this.scale.pageAlignVertically = true;
+                this.scale.forceOrientation(true);
+                this.scale.startFullScreen(false);
+            }
+        };
+        PlayState.prototype.create = function () {
+            _super.prototype.create.call(this);
+            // Llamámos a todos los metodos de los creates
+            this.createTilemap();
+            this.createBackground();
+            this.createWalls();
+            this.createExplosions();
+            this.createBullets();
+            this.createPlayer();
+            this.setupCamera();
+            this.createRecolectables();
+            this.createMonsters();
+            // Importante crear en último lugar los textos para que el resto de elementos de la pantalla no los pisen
+            this.createTexts();
+            // Comprobamos en qué plataforma estámos jugando
+            if (!this.game.device.desktop) {
+                this.createVirtualJoystick();
+            }
+        };
+        //-------------------------------------------------------------------------------
+        // Create elementos fisicos: Jugadores, monstruos, balas, recolectables y explosiones
+        //-------------------------------------------------------------------------------
+        // Jugador principal
+        PlayState.prototype.createPlayer = function () {
+            var jugador = new MyGame.Player('J1', 5, this.game, this.world.centerX, this.world.centerY, 'player', 0);
+            this.game.player = this.add.existing(jugador);
+            // Nota: importante asignar el jugador con add.existing. Si se referencia directamente la variable causará problemas
+        };
+        ;
+        // Generamos los monstruos cdel tipo que nos interese
+        PlayState.prototype.createMonsters = function () {
+            this.game.monsters = this.add.group();
+            // Instanciamos la clase factory que es con la que construiremos los zombies
+            var factory = new MyGame.MonsterFactory(this.game);
+            // Generamos 10 zombies rápidos
+            for (var iterador = 0; iterador < 10; iterador++) {
+                var monster1 = factory.generarMonstruo('Zombie Runner');
+                // Anyadimos los zombies al grupo
+                this.game.add.existing(monster1);
+                this.game.monsters.add(monster1);
+            }
+            // Generamos 15 normales
+            for (var iterador = 0; iterador < 15; iterador++) {
+                var monster2 = factory.generarMonstruo('Zombie Normal');
+                // Anyadimos los zombies al grupo
+                this.game.add.existing(monster2);
+                this.game.monsters.add(monster2);
+            }
+        };
+        ;
+        // Le damos las propiedades a las balas
+        PlayState.prototype.createBullets = function () {
+            this.game.bullets = this.add.group();
+            this.game.bullets.enableBody = true;
+            this.game.bullets.physicsBodyType = Phaser.Physics.ARCADE;
+            this.game.bullets.createMultiple(20, 'bullet');
+            this.game.bullets.setAll('anchor.x', 0.5);
+            this.game.bullets.setAll('anchor.y', 0.5);
+            this.game.bullets.setAll('scale.x', 0.5);
+            this.game.bullets.setAll('scale.y', 0.5);
+            this.game.bullets.setAll('outOfBoundsKill', true);
+            this.game.bullets.setAll('checkWorldBounds', true);
+        };
+        ;
+        // Con este metodo se generan las explosiones, existen tres tipos y se escogen de manera al azar
+        PlayState.prototype.createExplosions = function () {
+            var _this = this;
+            this.game.explosions = this.add.group();
+            this.game.explosions.createMultiple(20, 'explosion');
+            this.game.explosions.setAll('anchor.x', 0.5);
+            this.game.explosions.setAll('anchor.y', 0.5);
+            this.game.explosions.forEach(function (explosion) {
+                explosion.loadTexture(_this.rnd.pick(['explosion', 'explosion2', 'explosion3']));
+            }, this);
+        };
+        ;
+        // Método con el que creamos los muros y marcamos los limites del mapa
+        PlayState.prototype.createWalls = function () {
+            this.game.walls = this.game.tilemap.createLayer('walls');
+            this.game.walls.x = this.world.centerX;
+            this.game.walls.y = this.world.centerY;
+            this.game.walls.resizeWorld();
+            this.game.tilemap.setCollisionBetween(1, 195, true, 'walls');
+        };
+        ;
+        PlayState.prototype.createRecolectables = function () {
+            // Anyadimos el recolectable a un grupo
+            this.game.recolectables = this.add.group();
+            this.game.recolectables.enableBody = true;
+            // Posiciones en las que generaremos los recolectables
+            var positions = [
+                new Point(500, 295),
+                new Point(390, 335), new Point(610, 335),
+                new Point(320, 400), new Point(680, 400),
+                new Point(295, 500), new Point(705, 500),
+                new Point(320, 605), new Point(680, 605),
+                new Point(390, 665), new Point(610, 665),
+                new Point(500, 705),
+            ];
+            // Colocamos los sprites en sus coordenadas a traves de un for
+            for (var i = 0; i < positions.length; i++) {
+                var position = positions[i];
+                // instanciamos el Sprite
+                var recolectable = new MyGame.PartesDelTesoro(this.game, "Pieza del tesoro", i, position.x, position.y, 'recolectable', 0);
+                // mostramos el Sprite por pantalla
+                this.add.existing(recolectable);
+                this.game.recolectables.add(recolectable);
+            }
+        };
+        //---------------------------------------------------------
+        // Textos, mapa... Parte gráfica del juego
+        //---------------------------------------------------------
+        // En este metodo generamos los textos que mostraremos por pantalla
+        PlayState.prototype.createTexts = function () {
+            var width = this.scale.bounds.width;
+            var height = this.scale.bounds.height;
+            this.game.recolectableText = this.add.text(30, 20, 'Recolectables: ', { font: "15px Arial", fill: "#ffffff" });
+            this.game.recolectableText.fixedToCamera = true;
+            this.game.scoreText = this.add.text(this.game.TEXT_MARGIN, this.game.TEXT_MARGIN, 'Score: ' + this.game.score, { font: "30px Arial", fill: "#ffffff" });
+            this.game.scoreText.fixedToCamera = true;
+            this.game.livesText = this.add.text(width - this.game.TEXT_MARGIN, this.game.TEXT_MARGIN, 'Lives: ' + this.game.player.health, { font: "30px Arial", fill: "#ffffff" });
+            this.game.livesText.anchor.setTo(1, 0);
+            this.game.livesText.fixedToCamera = true;
+            this.game.stateText = this.add.text(width / 2, height / 2, '', { font: '84px Arial', fill: '#fff' });
+            this.game.stateText.anchor.setTo(0.5, 0.5);
+            this.game.stateText.visible = false;
+            this.game.stateText.fixedToCamera = true;
+        };
+        ;
+        // Método con el que creamos el fondo y ajustamos las coordenadas
+        PlayState.prototype.createBackground = function () {
+            this.game.background = this.game.tilemap.createLayer('background');
+            this.game.background.x = this.world.centerX;
+            this.game.background.y = this.world.centerY;
+        };
+        ;
+        // Incorpora el mapa al juego a partir de un tileMap
+        PlayState.prototype.createTilemap = function () {
+            this.game.tilemap = this.game.add.tilemap('tilemap');
+            this.game.tilemap.addTilesetImage('tilesheet_complete', 'tiles');
+        };
+        ;
+        //---------------------------------------------------------
+        //  Movimiento jugador, monstruos y lógica general del juego
+        //---------------------------------------------------------
+        // ----- Monstruos ------ //
+        PlayState.prototype.setRandomAngle = function (monster) {
+            monster.angle = this.rnd.angle();
+        };
+        PlayState.prototype.resetMonster = function (monster) {
+            monster.rotation = this.physics.arcade.angleBetween(monster, this.game.player);
+        };
+        // Función para mover los monstruos
+        PlayState.prototype.moveMonsters = function () {
+            this.game.monsters.forEach(this.advanceStraightAhead, this);
+        };
+        ;
+        // Metodo con el que hacemos avanzar los monstruos en dirección a su angulo
+        PlayState.prototype.advanceStraightAhead = function (monster) {
+            this.physics.arcade.velocityFromAngle(monster.angle, this.game.MONSTER_SPEED, monster.body.velocity);
+        };
+        // ------ Jugador ----- //
+        // Función para mover jugador
+        PlayState.prototype.movePlayer = function () {
+            // Controles de teclado
+            var moveWithKeyboard = function () {
+                if (this.game.cursors.left.isDown ||
+                    this.input.keyboard.isDown(Phaser.Keyboard.A)) {
+                    this.game.player.body.acceleration.x = -this.game.PLAYER_ACCELERATION;
+                }
+                else if (this.game.cursors.right.isDown ||
+                    this.input.keyboard.isDown(Phaser.Keyboard.D)) {
+                    this.game.player.body.acceleration.x = this.game.PLAYER_ACCELERATION;
+                }
+                else if (this.game.cursors.up.isDown ||
+                    this.game.input.keyboard.isDown(Phaser.Keyboard.W)) {
+                    this.game.player.body.acceleration.y = -this.game.PLAYER_ACCELERATION;
+                }
+                else if (this.game.cursors.down.isDown ||
+                    this.input.keyboard.isDown(Phaser.Keyboard.S)) {
+                    this.game.player.body.acceleration.y = this.game.PLAYER_ACCELERATION;
+                }
+                else {
+                    this.game.player.body.acceleration.x = 0;
+                    this.game.player.body.acceleration.y = 0;
+                }
+            };
+            // Controles con joystick
+            var moveWithVirtualJoystick = function () {
+                if (this.game.gamepad.stick1.cursors.left) {
+                    this.game.player.body.acceleration.x = -this.game.PLAYER_ACCELERATION;
+                }
+                if (this.game.gamepad.stick1.cursors.right) {
+                    this.game.player.body.acceleration.x = this.game.PLAYER_ACCELERATION;
+                }
+                else if (this.game.gamepad.stick1.cursors.up) {
+                    this.game.player.body.acceleration.y = -this.game.PLAYER_ACCELERATION;
+                }
+                else if (this.game.gamepad.stick1.cursors.down) {
+                    this.game.player.body.acceleration.y = this.game.PLAYER_ACCELERATION;
+                }
+                else {
+                    this.game.player.body.acceleration.x = 0;
+                    this.game.player.body.acceleration.y = 0;
+                }
+            };
+            // Comprobamos si la plataforma en la que se ejecuta el juego es escritorio o movil
+            if (this.game.device.desktop) {
+                moveWithKeyboard.call(this);
+            }
+            else {
+                moveWithVirtualJoystick.call(this);
+            }
+        };
+        ;
+        PlayState.prototype.rotateWithRightStick = function () {
+            var speed = this.game.gamepad.stick2.speed;
+            if (Math.abs(speed.x) + Math.abs(speed.y) > 20) {
+                var rotatePos = new Phaser.Point(this.game.player.x + speed.x, this.game.player.y + speed.y);
+                this.game.player.rotation = this.physics.arcade.angleToXY(this.game.player, rotatePos.x, rotatePos.y);
+                this.fire();
+            }
+        };
+        // Función con la que rotamos al jugador en dirección al puntero del ratón
+        PlayState.prototype.rotatePlayerToPointer = function () {
+            this.game.player.rotation = this.physics.arcade.angleToPointer(this.game.player, this.input.activePointer);
+        };
+        ;
+        // ---- Cámara y controles ----//
+        PlayState.prototype.createVirtualJoystick = function () {
+            this.game.gamepad = new Gamepads.GamePad(this.game, Gamepads.GamepadType.DOUBLE_STICK);
+        };
+        ;
+        PlayState.prototype.setupCamera = function () {
+            this.camera.follow(this.game.player);
+        };
+        ;
+        //---------------------------------------------------------
+        //  Tweens, efectos, animaciones del juego.
+        //---------------------------------------------------------
+        PlayState.prototype.explosion = function (x, y) {
+            // Sacamos el primer sprite muerto del group
+            var explosion = this.game.explosions.getFirstDead();
+            if (explosion) {
+                // Colocamos la explosión con su transpariencia y posición
+                explosion.reset(x - this.rnd.integerInRange(0, 5) + this.rnd.integerInRange(0, 5), y - this.rnd.integerInRange(0, 5) + this.rnd.integerInRange(0, 5));
+                explosion.alpha = 0.6;
+                explosion.angle = this.rnd.angle();
+                explosion.scale.setTo(this.rnd.realInRange(0.5, 0.75));
+                // Hacemos que varíe su tamaño para dar la sensación de que el humo se disipa
+                this.add.tween(explosion.scale).to({ x: 0, y: 0 }, 500).start();
+                var tween = this.add.tween(explosion).to({ alpha: 0 }, 500);
+                // Una vez terminado matámos la explosión
+                tween.onComplete.add(function () {
+                    explosion.kill();
+                });
+                tween.start();
+            }
+        };
+        PlayState.prototype.blink = function (sprite) {
+            var tween = this.add.tween(sprite)
+                .to({ alpha: 0.5 }, 100, Phaser.Easing.Bounce.Out)
+                .to({ alpha: 1.0 }, 100, Phaser.Easing.Bounce.Out);
+            tween.repeat(3);
+            tween.start();
+        };
+        //---------------------------------------------------------
+        //  Colisiones y limites del mapa
+        //---------------------------------------------------------
+        PlayState.prototype.monsterTouchesPlayer = function (player, monster) {
+            monster.kill();
+            player.damage(1);
+            this.game.livesText.setText("Lives: " + this.game.player.health);
+            this.blink(player);
+            if (player.health == 0) {
+                this.game.stateText.text = " GAME OVER \n Click to restart";
+                this.game.stateText.visible = true;
+                //the "click to restart" handler
+                this.input.onTap.addOnce(this.restart, this);
+            }
+        };
+        PlayState.prototype.bulletHitWall = function (bullet, walls) {
+            this.explosion(bullet.x, bullet.y);
+            bullet.kill();
+        };
+        PlayState.prototype.bulletHitMonster = function (bullet, monster) {
+            bullet.kill();
+            monster.damage(1);
+            this.explosion(bullet.x, bullet.y);
+            if (monster.health > 0) {
+                this.blink(monster);
+            }
+            else {
+                this.game.score += 10;
+            }
+        };
+        PlayState.prototype.recogerTesoro = function (player, recolectable) {
+            // Anyadimos el recolectable al array
+            player.anyadirTesoro(recolectable);
+            player.mostrarTextoRecolectables();
+            // Nos cargamos el sprite
+            recolectable.kill();
+        };
+        //---------------------------------------------------------
+        //  Update principal del juego
+        //---------------------------------------------------------
+        PlayState.prototype.update = function () {
+            _super.prototype.update.call(this);
+            this.movePlayer();
+            this.moveMonsters();
+            // Determina el comportamiento de los zombis
+            if (this.game.monsters.countLiving() < 15) {
+                this.game.monsters.callAll('setComportamiento', null, new MyGame.Enfadado());
+            }
+            // Controles
+            if (this.game.device.desktop) {
+                this.rotatePlayerToPointer();
+                this.fireWhenButtonClicked();
+            }
+            else {
+                this.rotateWithRightStick();
+                this.fireWithRightStick();
+            }
+            // Colisiones
+            this.physics.arcade.collide(this.game.player, this.game.monsters, this.monsterTouchesPlayer, null, this);
+            this.physics.arcade.collide(this.game.player, this.game.walls);
+            this.physics.arcade.overlap(this.game.bullets, this.game.monsters, this.bulletHitMonster, null, this);
+            this.physics.arcade.collide(this.game.bullets, this.game.walls, this.bulletHitWall, null, this);
+            this.physics.arcade.collide(this.game.walls, this.game.monsters, this.resetMonster, null, this);
+            this.physics.arcade.collide(this.game.monsters, this.game.monsters, this.resetMonster, null, this);
+            this.physics.arcade.overlap(this.game.player, this.game.recolectables, this.recogerTesoro, null, this);
+        };
+        // Método para reiniciar el juego de cero (cuidado con las variables de puntuacion, vidas, etc...)
+        PlayState.prototype.restart = function () {
+            this.game.state.restart();
+            this.game.score = 0;
+        };
+        //---------------------------------------------------------
+        // Balas y disparos
+        //---------------------------------------------------------
+        PlayState.prototype.fireWithRightStick = function () {
+            //this.gamepad.stick2.
+        };
+        // Función con la que disparamos al hacer clic
+        PlayState.prototype.fireWhenButtonClicked = function () {
+            if (this.input.activePointer.isDown && this.game.player.health > 0) {
+                this.fire();
+            }
+        };
+        ;
+        // Función para disparar
+        PlayState.prototype.fire = function () {
+            // Usamos un if para respetar la cadencia de disparo
+            if (this.time.now > this.game.nextFire) {
+                // Sacamos el primer sprite muerto del group
+                var bullet = this.game.bullets.getFirstDead();
+                if (bullet) {
+                    // Colocamos la bala en su posición y angulo
+                    var length = this.game.player.width * 0.5 + 20;
+                    var x = this.game.player.x + (Math.cos(this.game.player.rotation) * length);
+                    var y = this.game.player.y + (Math.sin(this.game.player.rotation) * length);
+                    // Damos los valores a las balas, a las explosiones y el angulo
+                    bullet.reset(x, y);
+                    this.explosion(x, y);
+                    bullet.angle = this.game.player.angle;
+                    // Le damos bien la velocidad en relación al angulo para que la bala apunte bien
+                    var velocity = this.physics.arcade.velocityFromRotation(bullet.rotation, this.game.BULLET_SPEED);
+                    bullet.body.velocity.setTo(velocity.x, velocity.y);
+                    // Ajustamos la variable auxiliar nextFire usando la cadencia de fuego para saber cada cuando se puede disaprar
+                    this.game.nextFire = this.time.now + this.game.FIRE_RATE;
+                }
+            }
+        };
+        return PlayState;
+    })(Phaser.State);
+    MyGame.PlayState = PlayState;
+    window.onload = function () {
+        new MyGame.ShooterGame();
+    };
+})(MyGame || (MyGame = {}));
 /**
  * Phaser joystick plugin.
  * Usage: In your preloader function call the static method preloadAssets. It will handle the preload of the necessary
@@ -7,11 +784,6 @@
  * Use the speed dictionary to retrieve the input speed (if you are going to use an analog joystick)
  */
 /// <reference path="../phaser/phaser.d.ts"/>
-var __extends = (this && this.__extends) || function (d, b) {
-    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
-    function __() { this.constructor = d; }
-    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-};
 var Gamepads;
 (function (Gamepads) {
     (function (Sectors) {
@@ -954,675 +1726,37 @@ var Gamepads;
     })(Phaser.Plugin);
     Gamepads.GamePad = GamePad;
 })(Gamepads || (Gamepads = {}));
-/// <reference path="phaser/phaser.d.ts"/>
 /// <reference path="joypad/GamePad.ts"/>
-var game = PIXI.game;
-var Point = Phaser.Point;
-var ShooterGame = (function (_super) {
-    __extends(ShooterGame, _super);
-    function ShooterGame() {
-        _super.call(this, 1000, 850, Phaser.CANVAS, 'gameDiv');
-        // Constantes
-        this.PLAYER_ACCELERATION = 500; // aceleración del jugador
-        this.PLAYER_MAX_SPEED = 400; // pixels/second
-        this.PLAYER_DRAG = 600; // rozamiento del jugador
-        this.MONSTER_SPEED = 100; // velocidad de los monstruos
-        this.BULLET_SPEED = 800; // velocidad de las balas
-        this.FIRE_RATE = 200; // cadencia de disparo
-        this.TEXT_MARGIN = 50; // margen de los textos
-        // Variables
-        this.nextFire = 0; // Variable auxiliar para calcular el tiempo de disparo
-        this.score = 0; // Puntuación
-        this.state.add('main', mainState);
-        this.state.start('main');
-    }
-    return ShooterGame;
-})(Phaser.Game);
-var mainState = (function (_super) {
-    __extends(mainState, _super);
-    function mainState() {
-        _super.apply(this, arguments);
-    }
-    mainState.prototype.preload = function () {
-        _super.prototype.preload.call(this);
-        // Cargamos las imagenes y el json que incorpora el Tile
-        this.load.image('bg', 'assets/bg.png');
-        this.load.image('player', 'assets/survivor1_machine.png');
-        this.load.image('bullet', 'assets/bulletBeigeSilver_outline.png');
-        this.load.image('Zombie Normal', 'assets/zoimbie1_hold.png');
-        this.load.image('Zombie Runner', 'assets/zombie2_hold.png');
-        this.load.image('robot', 'assets/robot1_hold.png');
-        this.load.image('recolectable', 'assets/PickupLow.png');
-        this.load.image('angryZombie', 'assets/angryZombie.png');
-        this.load.image('explosion', 'assets/smokeWhite0.png');
-        this.load.image('explosion2', 'assets/smokeWhite1.png');
-        this.load.image('explosion3', 'assets/smokeWhite2.png');
-        this.load.tilemap('tilemap', 'assets/tiles.json', null, Phaser.Tilemap.TILED_JSON);
-        this.load.image('tiles', 'assets/tilesheet_complete.png');
-        this.load.image('joystick_base', 'assets/transparentDark05.png');
-        this.load.image('joystick_segment', 'assets/transparentDark09.png');
-        this.load.image('joystick_knob', 'assets/transparentDark49.png');
-        // Arrancamos el sistema de físicas
-        this.physics.startSystem(Phaser.Physics.ARCADE);
-        // Comprobamos la plataforma y ajustamos las teclas y las dimensiones de la pantalla
-        if (this.game.device.desktop) {
-            this.game.cursors = this.input.keyboard.createCursorKeys();
+var MyGame;
+(function (MyGame) {
+    var ShooterGame = (function (_super) {
+        __extends(ShooterGame, _super);
+        function ShooterGame() {
+            _super.call(this, 1000, 850, Phaser.CANVAS, 'gameDiv');
+            // Constantes
+            this.PLAYER_ACCELERATION = 500; // aceleración del jugador
+            this.PLAYER_MAX_SPEED = 400; // pixels/second
+            this.PLAYER_DRAG = 600; // rozamiento del jugador
+            this.MONSTER_SPEED = 100; // velocidad de los monstruos
+            this.BULLET_SPEED = 800; // velocidad de las balas
+            this.FIRE_RATE = 200; // cadencia de disparo
+            this.TEXT_MARGIN = 50; // margen de los textos
+            // Variables
+            this.nextFire = 0; // Variable auxiliar para calcular el tiempo de disparo
+            this.score = 0; // Puntuación
+            this.state.add("boot", MyGame.BootState);
+            this.state.add("load", MyGame.LoadState);
+            this.state.add("play", MyGame.PlayState);
+            this.state.start("boot");
         }
-        else {
-            this.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL;
-            this.scale.pageAlignHorizontally = true;
-            this.scale.pageAlignVertically = true;
-            this.scale.pageAlignHorizontally = true;
-            this.scale.pageAlignVertically = true;
-            this.scale.forceOrientation(true);
-            this.scale.startFullScreen(false);
-        }
+        return ShooterGame;
+    })(Phaser.Game);
+    MyGame.ShooterGame = ShooterGame;
+    //---------------------------------------------------------------------- //
+    // --------- Patrón Factory para el comportamiento de los zombies ------ //
+    //---------------------------------------------------------------------- //
+    window.onload = function () {
+        var game = new MyGame.ShooterGame();
     };
-    mainState.prototype.create = function () {
-        _super.prototype.create.call(this);
-        // Llamámos a todos los metodos de los creates
-        this.createTilemap();
-        this.createBackground();
-        this.createWalls();
-        this.createExplosions();
-        this.createBullets();
-        this.createPlayer();
-        this.setupCamera();
-        this.createRecolectables();
-        this.createMonsters();
-        // Importante crear en último lugar los textos para que el resto de elementos de la pantalla no los pisen
-        this.createTexts();
-        // Comprobamos en qué plataforma estámos jugando
-        if (!this.game.device.desktop) {
-            this.createVirtualJoystick();
-        }
-    };
-    //-------------------------------------------------------------------------------
-    // Create elementos fisicos: Jugadores, monstruos, balas, recolectables y explosiones
-    //-------------------------------------------------------------------------------
-    // Jugador principal
-    mainState.prototype.createPlayer = function () {
-        var jugador = new Player('J1', 5, this.game, this.world.centerX, this.world.centerY, 'player', 0);
-        this.game.player = this.add.existing(jugador);
-        // Nota: importante asignar el jugador con add.existing. Si se referencia directamente la variable causará problemas
-    };
-    ;
-    // Generamos los monstruos cdel tipo que nos interese
-    mainState.prototype.createMonsters = function () {
-        this.game.monsters = this.add.group();
-        // Instanciamos la clase factory que es con la que construiremos los zombies
-        var factory = new MonsterFactory(this.game);
-        // Generamos 10 zombies rápidos
-        for (var iterador = 0; iterador < 10; iterador++) {
-            var monster1 = factory.generarMonstruo('Zombie Runner');
-            // Anyadimos los zombies al grupo
-            this.game.add.existing(monster1);
-            this.game.monsters.add(monster1);
-        }
-        // Generamos 15 normales
-        for (var iterador = 0; iterador < 15; iterador++) {
-            var monster2 = factory.generarMonstruo('Zombie Normal');
-            // Anyadimos los zombies al grupo
-            this.game.add.existing(monster2);
-            this.game.monsters.add(monster2);
-        }
-    };
-    ;
-    // Le damos las propiedades a las balas
-    mainState.prototype.createBullets = function () {
-        this.game.bullets = this.add.group();
-        this.game.bullets.enableBody = true;
-        this.game.bullets.physicsBodyType = Phaser.Physics.ARCADE;
-        this.game.bullets.createMultiple(20, 'bullet');
-        this.game.bullets.setAll('anchor.x', 0.5);
-        this.game.bullets.setAll('anchor.y', 0.5);
-        this.game.bullets.setAll('scale.x', 0.5);
-        this.game.bullets.setAll('scale.y', 0.5);
-        this.game.bullets.setAll('outOfBoundsKill', true);
-        this.game.bullets.setAll('checkWorldBounds', true);
-    };
-    ;
-    // Con este metodo se generan las explosiones, existen tres tipos y se escogen de manera al azar
-    mainState.prototype.createExplosions = function () {
-        var _this = this;
-        this.game.explosions = this.add.group();
-        this.game.explosions.createMultiple(20, 'explosion');
-        this.game.explosions.setAll('anchor.x', 0.5);
-        this.game.explosions.setAll('anchor.y', 0.5);
-        this.game.explosions.forEach(function (explosion) {
-            explosion.loadTexture(_this.rnd.pick(['explosion', 'explosion2', 'explosion3']));
-        }, this);
-    };
-    ;
-    // Método con el que creamos los muros y marcamos los limites del mapa
-    mainState.prototype.createWalls = function () {
-        this.game.walls = this.game.tilemap.createLayer('walls');
-        this.game.walls.x = this.world.centerX;
-        this.game.walls.y = this.world.centerY;
-        this.game.walls.resizeWorld();
-        this.game.tilemap.setCollisionBetween(1, 195, true, 'walls');
-    };
-    ;
-    mainState.prototype.createRecolectables = function () {
-        // Anyadimos el recolectable a un grupo
-        this.game.recolectables = this.add.group();
-        this.game.recolectables.enableBody = true;
-        // Posiciones en las que generaremos los recolectables
-        var positions = [
-            new Point(500, 295),
-            new Point(390, 335), new Point(610, 335),
-            new Point(320, 400), new Point(680, 400),
-            new Point(295, 500), new Point(705, 500),
-            new Point(320, 605), new Point(680, 605),
-            new Point(390, 665), new Point(610, 665),
-            new Point(500, 705),
-        ];
-        // Colocamos los sprites en sus coordenadas a traves de un for
-        for (var i = 0; i < positions.length; i++) {
-            var position = positions[i];
-            // instanciamos el Sprite
-            var recolectable = new PartesDelTesoro(this.game, "Pieza del tesoro", i, position.x, position.y, 'recolectable', 0);
-            // mostramos el Sprite por pantalla
-            this.add.existing(recolectable);
-            this.game.recolectables.add(recolectable);
-        }
-    };
-    //---------------------------------------------------------
-    // Textos, mapa... Parte gráfica del juego
-    //---------------------------------------------------------
-    // En este metodo generamos los textos que mostraremos por pantalla
-    mainState.prototype.createTexts = function () {
-        var width = this.scale.bounds.width;
-        var height = this.scale.bounds.height;
-        this.game.recolectableText = this.add.text(30, 20, 'Recolectables: ', { font: "15px Arial", fill: "#ffffff" });
-        this.game.recolectableText.fixedToCamera = true;
-        this.game.scoreText = this.add.text(this.game.TEXT_MARGIN, this.game.TEXT_MARGIN, 'Score: ' + this.game.score, { font: "30px Arial", fill: "#ffffff" });
-        this.game.scoreText.fixedToCamera = true;
-        this.game.livesText = this.add.text(width - this.game.TEXT_MARGIN, this.game.TEXT_MARGIN, 'Lives: ' + this.game.player.health, { font: "30px Arial", fill: "#ffffff" });
-        this.game.livesText.anchor.setTo(1, 0);
-        this.game.livesText.fixedToCamera = true;
-        this.game.stateText = this.add.text(width / 2, height / 2, '', { font: '84px Arial', fill: '#fff' });
-        this.game.stateText.anchor.setTo(0.5, 0.5);
-        this.game.stateText.visible = false;
-        this.game.stateText.fixedToCamera = true;
-    };
-    ;
-    // Método con el que creamos el fondo y ajustamos las coordenadas
-    mainState.prototype.createBackground = function () {
-        this.game.background = this.game.tilemap.createLayer('background');
-        this.game.background.x = this.world.centerX;
-        this.game.background.y = this.world.centerY;
-    };
-    ;
-    // Incorpora el mapa al juego a partir de un tileMap
-    mainState.prototype.createTilemap = function () {
-        this.game.tilemap = this.game.add.tilemap('tilemap');
-        this.game.tilemap.addTilesetImage('tilesheet_complete', 'tiles');
-    };
-    ;
-    //---------------------------------------------------------
-    //  Movimiento jugador, monstruos y lógica general del juego
-    //---------------------------------------------------------
-    // ----- Monstruos ------ //
-    mainState.prototype.setRandomAngle = function (monster) {
-        monster.angle = this.rnd.angle();
-    };
-    mainState.prototype.resetMonster = function (monster) {
-        monster.rotation = this.physics.arcade.angleBetween(monster, this.game.player);
-    };
-    // Función para mover los monstruos
-    mainState.prototype.moveMonsters = function () {
-        this.game.monsters.forEach(this.advanceStraightAhead, this);
-    };
-    ;
-    // Metodo con el que hacemos avanzar los monstruos en dirección a su angulo
-    mainState.prototype.advanceStraightAhead = function (monster) {
-        this.physics.arcade.velocityFromAngle(monster.angle, this.game.MONSTER_SPEED, monster.body.velocity);
-    };
-    // ------ Jugador ----- //
-    // Función para mover jugador
-    mainState.prototype.movePlayer = function () {
-        // Controles de teclado
-        var moveWithKeyboard = function () {
-            if (this.game.cursors.left.isDown ||
-                this.input.keyboard.isDown(Phaser.Keyboard.A)) {
-                this.game.player.body.acceleration.x = -this.game.PLAYER_ACCELERATION;
-            }
-            else if (this.game.cursors.right.isDown ||
-                this.input.keyboard.isDown(Phaser.Keyboard.D)) {
-                this.game.player.body.acceleration.x = this.game.PLAYER_ACCELERATION;
-            }
-            else if (this.game.cursors.up.isDown ||
-                this.game.input.keyboard.isDown(Phaser.Keyboard.W)) {
-                this.game.player.body.acceleration.y = -this.game.PLAYER_ACCELERATION;
-            }
-            else if (this.game.cursors.down.isDown ||
-                this.input.keyboard.isDown(Phaser.Keyboard.S)) {
-                this.game.player.body.acceleration.y = this.game.PLAYER_ACCELERATION;
-            }
-            else {
-                this.game.player.body.acceleration.x = 0;
-                this.game.player.body.acceleration.y = 0;
-            }
-        };
-        // Controles con joystick
-        var moveWithVirtualJoystick = function () {
-            if (this.game.gamepad.stick1.cursors.left) {
-                this.game.player.body.acceleration.x = -this.game.PLAYER_ACCELERATION;
-            }
-            if (this.game.gamepad.stick1.cursors.right) {
-                this.game.player.body.acceleration.x = this.game.PLAYER_ACCELERATION;
-            }
-            else if (this.game.gamepad.stick1.cursors.up) {
-                this.game.player.body.acceleration.y = -this.game.PLAYER_ACCELERATION;
-            }
-            else if (this.game.gamepad.stick1.cursors.down) {
-                this.game.player.body.acceleration.y = this.game.PLAYER_ACCELERATION;
-            }
-            else {
-                this.game.player.body.acceleration.x = 0;
-                this.game.player.body.acceleration.y = 0;
-            }
-        };
-        // Comprobamos si la plataforma en la que se ejecuta el juego es escritorio o movil
-        if (this.game.device.desktop) {
-            moveWithKeyboard.call(this);
-        }
-        else {
-            moveWithVirtualJoystick.call(this);
-        }
-    };
-    ;
-    mainState.prototype.rotateWithRightStick = function () {
-        var speed = this.game.gamepad.stick2.speed;
-        if (Math.abs(speed.x) + Math.abs(speed.y) > 20) {
-            var rotatePos = new Phaser.Point(this.game.player.x + speed.x, this.game.player.y + speed.y);
-            this.game.player.rotation = this.physics.arcade.angleToXY(this.game.player, rotatePos.x, rotatePos.y);
-            this.fire();
-        }
-    };
-    // Función con la que rotamos al jugador en dirección al puntero del ratón
-    mainState.prototype.rotatePlayerToPointer = function () {
-        this.game.player.rotation = this.physics.arcade.angleToPointer(this.game.player, this.input.activePointer);
-    };
-    ;
-    // ---- Cámara y controles ----//
-    mainState.prototype.createVirtualJoystick = function () {
-        this.game.gamepad = new Gamepads.GamePad(this.game, Gamepads.GamepadType.DOUBLE_STICK);
-    };
-    ;
-    mainState.prototype.setupCamera = function () {
-        this.camera.follow(this.game.player);
-    };
-    ;
-    //---------------------------------------------------------
-    //  Tweens, efectos, animaciones del juego.
-    //---------------------------------------------------------
-    mainState.prototype.explosion = function (x, y) {
-        // Sacamos el primer sprite muerto del group
-        var explosion = this.game.explosions.getFirstDead();
-        if (explosion) {
-            // Colocamos la explosión con su transpariencia y posición
-            explosion.reset(x - this.rnd.integerInRange(0, 5) + this.rnd.integerInRange(0, 5), y - this.rnd.integerInRange(0, 5) + this.rnd.integerInRange(0, 5));
-            explosion.alpha = 0.6;
-            explosion.angle = this.rnd.angle();
-            explosion.scale.setTo(this.rnd.realInRange(0.5, 0.75));
-            // Hacemos que varíe su tamaño para dar la sensación de que el humo se disipa
-            this.add.tween(explosion.scale).to({ x: 0, y: 0 }, 500).start();
-            var tween = this.add.tween(explosion).to({ alpha: 0 }, 500);
-            // Una vez terminado matámos la explosión
-            tween.onComplete.add(function () {
-                explosion.kill();
-            });
-            tween.start();
-        }
-    };
-    mainState.prototype.blink = function (sprite) {
-        var tween = this.add.tween(sprite)
-            .to({ alpha: 0.5 }, 100, Phaser.Easing.Bounce.Out)
-            .to({ alpha: 1.0 }, 100, Phaser.Easing.Bounce.Out);
-        tween.repeat(3);
-        tween.start();
-    };
-    //---------------------------------------------------------
-    //  Colisiones y limites del mapa
-    //---------------------------------------------------------
-    mainState.prototype.monsterTouchesPlayer = function (player, monster) {
-        monster.kill();
-        player.damage(1);
-        this.game.livesText.setText("Lives: " + this.game.player.health);
-        this.blink(player);
-        if (player.health == 0) {
-            this.game.stateText.text = " GAME OVER \n Click to restart";
-            this.game.stateText.visible = true;
-            //the "click to restart" handler
-            this.input.onTap.addOnce(this.restart, this);
-        }
-    };
-    mainState.prototype.bulletHitWall = function (bullet, walls) {
-        this.explosion(bullet.x, bullet.y);
-        bullet.kill();
-    };
-    mainState.prototype.bulletHitMonster = function (bullet, monster) {
-        bullet.kill();
-        monster.damage(1);
-        this.explosion(bullet.x, bullet.y);
-        if (monster.health > 0) {
-            this.blink(monster);
-        }
-        else {
-            this.game.score += 10;
-        }
-    };
-    mainState.prototype.recogerTesoro = function (player, recolectable) {
-        // Anyadimos el recolectable al array
-        player.anyadirTesoro(recolectable);
-        player.mostrarTextoRecolectables();
-        // Nos cargamos el sprite
-        recolectable.kill();
-    };
-    //---------------------------------------------------------
-    //  Update principal del juego
-    //---------------------------------------------------------
-    mainState.prototype.update = function () {
-        _super.prototype.update.call(this);
-        this.movePlayer();
-        this.moveMonsters();
-        // Determina el comportamiento de los zombis
-        if (this.game.monsters.countLiving() < 15) {
-            this.game.monsters.callAll('setComportamiento', null, new Enfadado());
-        }
-        // Controles
-        if (this.game.device.desktop) {
-            this.rotatePlayerToPointer();
-            this.fireWhenButtonClicked();
-        }
-        else {
-            this.rotateWithRightStick();
-            this.fireWithRightStick();
-        }
-        // Colisiones
-        this.physics.arcade.collide(this.game.player, this.game.monsters, this.monsterTouchesPlayer, null, this);
-        this.physics.arcade.collide(this.game.player, this.game.walls);
-        this.physics.arcade.overlap(this.game.bullets, this.game.monsters, this.bulletHitMonster, null, this);
-        this.physics.arcade.collide(this.game.bullets, this.game.walls, this.bulletHitWall, null, this);
-        this.physics.arcade.collide(this.game.walls, this.game.monsters, this.resetMonster, null, this);
-        this.physics.arcade.collide(this.game.monsters, this.game.monsters, this.resetMonster, null, this);
-        this.physics.arcade.overlap(this.game.player, this.game.recolectables, this.recogerTesoro, null, this);
-    };
-    // Método para reiniciar el juego de cero (cuidado con las variables de puntuacion, vidas, etc...)
-    mainState.prototype.restart = function () {
-        this.game.state.restart();
-        this.game.score = 0;
-    };
-    //---------------------------------------------------------
-    // Balas y disparos
-    //---------------------------------------------------------
-    mainState.prototype.fireWithRightStick = function () {
-        //this.gamepad.stick2.
-    };
-    // Función con la que disparamos al hacer clic
-    mainState.prototype.fireWhenButtonClicked = function () {
-        if (this.input.activePointer.isDown && this.game.player.health > 0) {
-            this.fire();
-        }
-    };
-    ;
-    // Función para disparar
-    mainState.prototype.fire = function () {
-        // Usamos un if para respetar la cadencia de disparo
-        if (this.time.now > this.game.nextFire) {
-            // Sacamos el primer sprite muerto del group
-            var bullet = this.game.bullets.getFirstDead();
-            if (bullet) {
-                // Colocamos la bala en su posición y angulo
-                var length = this.game.player.width * 0.5 + 20;
-                var x = this.game.player.x + (Math.cos(this.game.player.rotation) * length);
-                var y = this.game.player.y + (Math.sin(this.game.player.rotation) * length);
-                // Damos los valores a las balas, a las explosiones y el angulo
-                bullet.reset(x, y);
-                this.explosion(x, y);
-                bullet.angle = this.game.player.angle;
-                // Le damos bien la velocidad en relación al angulo para que la bala apunte bien
-                var velocity = this.physics.arcade.velocityFromRotation(bullet.rotation, this.game.BULLET_SPEED);
-                bullet.body.velocity.setTo(velocity.x, velocity.y);
-                // Ajustamos la variable auxiliar nextFire usando la cadencia de fuego para saber cada cuando se puede disaprar
-                this.game.nextFire = this.time.now + this.game.FIRE_RATE;
-            }
-        }
-    };
-    return mainState;
-})(Phaser.State);
-//------------------------------------------------------------------------ //
-// --------- Patrón Decorator para recoger coleccionables y extras ------- //
-//------------------------------------------------------------------------ //
-var Recolectable = (function (_super) {
-    __extends(Recolectable, _super);
-    // Constructor con una velocidad angular fija y las fisicas activadas
-    function Recolectable(game, tipoRecolectable, x, y, key, frame) {
-        _super.call(this, game, x, y, key, frame);
-        this.tipoRecolectable = tipoRecolectable;
-        // Sprite
-        this.game.physics.enable(this);
-    }
-    // Metodo update
-    Recolectable.prototype.update = function () {
-        _super.prototype.update.call(this);
-    };
-    // Getters
-    Recolectable.prototype.getTipoRecolectable = function () {
-        return this.tipoRecolectable;
-    };
-    return Recolectable;
-})(Phaser.Sprite);
-var PartesDelTesoro = (function (_super) {
-    __extends(PartesDelTesoro, _super);
-    function PartesDelTesoro(game, tipoRecolectable, numeroParteDelTesoro, x, y, key, frame) {
-        _super.call(this, game, tipoRecolectable, x, y, key, frame);
-        this.numeroParteDelTesoro = 0;
-        // Neceistamos todas las partes del tesoro
-        this.numeroParteDelTesoro = numeroParteDelTesoro;
-        // Sprite
-        this.anchor.setTo(0.5, 0.5);
-        this.body.angularVelocity = 150;
-    }
-    // Getters
-    PartesDelTesoro.prototype.getNumeroParteDelTesoro = function () {
-        return this.numeroParteDelTesoro;
-    };
-    return PartesDelTesoro;
-})(Recolectable);
-//---------------------------------------------------------------------- //
-// --------- Patrón Factory para el comportamiento de los zombies ------ //
-//---------------------------------------------------------------------- //
-var Monster = (function (_super) {
-    __extends(Monster, _super);
-    // Constructores
-    function Monster(game, x, y, key, frame) {
-        _super.call(this, game, x, y, key, frame);
-        // Comportamiento
-        this.comportamiento = new NoEnfadado();
-        this.game.physics.enable(this, Phaser.Physics.ARCADE);
-        this.body.enableBody = true;
-        this.game = game;
-        // En este caso no tenemos datos del Monstruo porque es una clase abstracta, los instanciaremos en las clases que hereden
-    }
-    Monster.prototype.update = function () {
-        _super.prototype.update.call(this);
-        // Lógica de los zombies de Carles
-        this.game.physics.arcade.velocityFromAngle(this.angle, this.velocidadMonstruo, this.body.velocity);
-        this.events.onOutOfBounds.add(this.resetMonster, this);
-    };
-    // Metodos
-    Monster.prototype.resetMonster = function (monster) {
-        monster.rotation = this.game.physics.arcade.angleBetween(monster, this.game.player);
-    };
-    // Setters
-    Monster.prototype.setComportamiento = function (comportamiento) {
-        this.comportamiento = comportamiento;
-        if (this.comportamiento.velocidad != null && this.comportamiento.key != null) {
-            this.velocidadMonstruo = this.comportamiento.velocidad;
-            this.loadTexture(this.comportamiento.key);
-        }
-    };
-    Monster.prototype.setEnfadado = function (valor) {
-        if (valor == true) {
-            this.setComportamiento(new Enfadado());
-        }
-    };
-    return Monster;
-})(Phaser.Sprite);
-var ZombieNormal = (function (_super) {
-    __extends(ZombieNormal, _super);
-    // Zombie normal
-    function ZombieNormal(game, key) {
-        _super.call(this, game, 150, 150, key, 0);
-        // Ajustamos el sprite
-        this.anchor.setTo(0.5, 0.5);
-        this.angle = game.rnd.angle();
-        // Datos del monstruo
-        this.keyImagen = "Zombie Normal";
-        this.health = 3;
-        this.velocidadMonstruo = 100;
-    }
-    ZombieNormal.prototype.update = function () {
-        _super.prototype.update.call(this);
-    };
-    return ZombieNormal;
-})(Monster);
-var ZombieRunner = (function (_super) {
-    __extends(ZombieRunner, _super);
-    // Els zombieRunner son més ràpids peró suporten menys trets
-    function ZombieRunner(game, key) {
-        _super.call(this, game, 900, 150, key, 0);
-        // Ajustamos el sprite
-        this.anchor.setTo(0.5, 0.5);
-        this.angle = game.rnd.angle();
-        // Datos del monstruo
-        this.keyImagen = "Zombie Runner";
-        this.health = 2;
-        this.velocidadMonstruo = 250;
-    }
-    ZombieRunner.prototype.update = function () {
-        _super.prototype.update.call(this);
-    };
-    return ZombieRunner;
-})(Monster);
-var MonsterFactory = (function () {
-    // Constructores
-    function MonsterFactory(game) {
-        this.game = game;
-    }
-    // Con este metodo
-    MonsterFactory.prototype.generarMonstruo = function (key) {
-        if (key == 'Zombie Normal') {
-            return new ZombieNormal(this.game, key);
-        }
-        else if (key == 'Zombie Runner') {
-            return new ZombieRunner(this.game, key);
-        }
-        else {
-            return null;
-        }
-    };
-    return MonsterFactory;
-})();
-//------------------------------------------------------------------ //
-// --------- Patrón Observer para la puntuación del jugador -------- //
-//------------------------------------------------------------------ //
-var Player = (function (_super) {
-    __extends(Player, _super);
-    // Constructores
-    function Player(id, numeroVidas, game, x, y, key, frame) {
-        _super.call(this, game, x, y, key, frame);
-        // Codigo al que suscribiremos nuestro jugador
-        this.ScoreBackend = new ScoreBackend();
-        // Le vamos guardando a nuestro personaje los recolectables
-        this.partesDelTesoro = [];
-        this.contador = 0; // Contador para saber en que posicion del arrayEscribir
-        this.puntuacion = 0; // Puntos que lleva
-        // Ajustamos el sprite
-        this.anchor.setTo(0.5, 0.5);
-        this.game.physics.enable(this, Phaser.Physics.ARCADE);
-        this.body.maxVelocity.setTo(this.game.PLAYER_MAX_SPEED, this.game.PLAYER_MAX_SPEED);
-        this.body.collideWorldBounds = true;
-        this.body.drag.setTo(this.game.PLAYER_DRAG, this.game.PLAYER_DRAG);
-        // Datos del jugador
-        this.game = game;
-        this.id = id;
-        this.health = numeroVidas;
-        // Finalmente suscribimos el jugador a nuestro codigo que monitoriza las puntuaciones
-        this.ScoreBackend.suscribirJugador(this);
-    }
-    // Update
-    Player.prototype.update = function () {
-        _super.prototype.update.call(this);
-        this.ScoreBackend.update(this);
-    };
-    // Metodos
-    Player.prototype.notificarPuntuacion = function () {
-        this.game.scoreText.setText("Score: " + this.game.score);
-    };
-    Player.prototype.anyadirTesoro = function (recolectable) {
-        this.partesDelTesoro[this.contador] = recolectable;
-        this.contador++;
-    };
-    Player.prototype.mostrarTextoRecolectables = function () {
-        var textoRecolectables = "";
-        for (var iterador = 0; iterador < this.partesDelTesoro.length; iterador++) {
-            textoRecolectables = textoRecolectables + "Tesoro " + this.partesDelTesoro[iterador].getNumeroParteDelTesoro() + " - ";
-            this.game.recolectableText.setText("Recolectables: " + textoRecolectables);
-        }
-    };
-    // Getters
-    Player.prototype.getId = function () {
-        return this.id;
-    };
-    Player.prototype.getPuntuacion = function () {
-        return this.puntuacion;
-    };
-    return Player;
-})(Phaser.Sprite);
-var ScoreBackend = (function () {
-    // Constructor
-    function ScoreBackend() {
-        // Array que contiene todos los jugadores suscritos
-        this.jugadores = [];
-        // Contador auxiliar para saber en que posición del array escribir
-        this.contador = 0;
-    }
-    // Update
-    ScoreBackend.prototype.update = function (jugador) {
-        // Comprobamos si el jugador que recibimos está suscrito, es decir, si figura en el array
-        for (var iterador = 0; iterador < this.jugadores.length; iterador++) {
-            // Y si lo está notificamos al jugador el canvio pertinente
-            if (this.jugadores[iterador].id == jugador.id) {
-                jugador.notificarPuntuacion();
-            }
-        }
-    };
-    // Metodos
-    ScoreBackend.prototype.suscribirJugador = function (player) {
-        this.jugadores[this.contador] = player;
-        this.contador++;
-    };
-    return ScoreBackend;
-})();
-var NoEnfadado = (function () {
-    function NoEnfadado() {
-        this.key = null;
-        this.velocidad = null;
-    }
-    return NoEnfadado;
-})();
-var Enfadado = (function () {
-    function Enfadado() {
-        this.key = "angryZombie";
-        this.velocidad = 300;
-    }
-    return Enfadado;
-})();
-window.onload = function () {
-    new ShooterGame();
-};
+})(MyGame || (MyGame = {}));
 //# sourceMappingURL=main.js.map
