@@ -14,6 +14,6 @@ Patterns used:
 
 ## Example Images:
 
-<img src="http://i.imgur.com/yDrNGIh.png" width="250">
-<img src="http://i.imgur.com/zLubCay.png" width="250">
-<img src="http://i.imgur.com/WXrBStW.png" width="250">
+<img src="http://i.imgur.com/9CI6kGc.png" width="250">
+<img src="http://i.imgur.com/nVu7jQm.png" width="250">
+<img src="http://i.imgur.com/iPQI9TN.png" width="250">
